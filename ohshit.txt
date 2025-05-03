@@ -1,0 +1,11 @@
+I accidentally deleted the commit history , by forcing push to master
+
+first deleted the .git when the push failed 
+then force pushed
+
+
+--lost 22 + commit history, 
+well the entire project still remains,
+the development process was lost 
+this means earlier versions are unrecoverable
+git push  -- force was a huge mistake , never do it again
