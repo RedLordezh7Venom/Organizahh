@@ -1,0 +1,12 @@
+requests
+
+customtkinter
+Pillow
+
+langchain-google-genai
+langchain
+google-generativeai
+langchain-ollama
+python-dotenv
+
+pyinstaller
