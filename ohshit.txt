@@ -38,3 +38,4 @@ git push  -- force was a huge mistake , never do it again
 doesn't really matter now, there's no way going back, will develop the remaining part  : 4may2025
 
 some ci commits are still visible, but that's upto 5 commits
+since commits still exist on github (via hashed) , i got back the initial commit :n https://github.com/RedLordezh7Venom/Organizahh/commit/979d5b939e63272705ba5a9ceca0cbdb24f813ee
