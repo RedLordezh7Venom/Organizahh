@@ -138,7 +138,7 @@ def run_benchmark():
         groq_api_key = os.getenv("GROQ_API_KEY")
         groq_model = ChatGroq(
             api_key=groq_api_key,
-            model_name="llama3-70b-8192"
+            model_name="gemma2-9b-it"
         )
     except Exception as e:
         print(f"Error initializing Groq: {e}")
@@ -147,7 +147,7 @@ def run_benchmark():
     try:
         gemini_api_key = os.getenv("GOOGLE_API_KEY")
         gemini_model = GoogleGenerativeAI(
-            model="gemini-1.5-pro",
+            model="gemini-2.0-flash",
             api_key=gemini_api_key
         )
     except Exception as e:
@@ -163,9 +163,9 @@ def run_benchmark():
     # Create list of models to run
     models_to_run = []
     if groq_model:
-        models_to_run.append(("Groq (llama3-70b)", groq_model))
+        models_to_run.append(("Groq (gemma2-9b-it)", groq_model))
     if gemini_model:
-        models_to_run.append(("Gemini 1.5 Pro", gemini_model))
+        models_to_run.append(("Gemini 2.0 Pro", gemini_model))
     if llamafile_model:
         models_to_run.append(("Llamafile", llamafile_model))
     
