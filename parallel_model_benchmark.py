@@ -1,5 +1,5 @@
 """
-Benchmark script to compare Groq, Gemini, and Llamafile performance in parallel.
+Benchmark script to compare Groq, Gemini, Llamafile, and Ollama performance in parallel.
 """
 import os
 import time
@@ -13,6 +13,7 @@ from datetime import datetime
 from langchain_groq import ChatGroq
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_community.llms.llamafile import Llamafile
+from langchain_community.llms.ollama import Ollama
 from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
 
@@ -23,7 +24,7 @@ from listdir import list_files_and_folders
 load_dotenv()
 
 # Directory to analyze
-directory = "D:/Users/prabh/Downloads - Copy"
+directory = "C:/Users/prabh/Downloads"
 
 # Get files and folders
 files_and_folders = list_files_and_folders(directory)
@@ -129,7 +130,7 @@ def run_model(model_name, model_instance):
             "categories": 0,
             "error": str(e),
             "raw_response": None
-        }
+        } 
 
 # Main function to run all models in parallel
 def run_benchmark():
@@ -160,14 +161,22 @@ def run_benchmark():
         print(f"Error initializing Llamafile: {e}")
         llamafile_model = None
     
+    try:
+        ollama_model = Ollama(model="gemma3:1b-it-q8_0")
+    except Exception as e:
+        print(f"Error initializing Ollama: {e}")
+        ollama_model = None
+    
     # Create list of models to run
     models_to_run = []
     if groq_model:
         models_to_run.append(("Groq (gemma2-9b-it)", groq_model))
     if gemini_model:
-        models_to_run.append(("Gemini 2.0 Pro", gemini_model))
+        models_to_run.append(("Gemini 2.0 Flash", gemini_model))
     if llamafile_model:
         models_to_run.append(("Llamafile", llamafile_model))
+    if ollama_model:
+        models_to_run.append(("Ollama (gemma3:1b-it-q8_0)", ollama_model))
     
     if not models_to_run:
         print("No models available to run. Please check your API keys and model configurations.")
