@@ -1,0 +1,5 @@
+to make the following changes before final app:
+-use groq for faster inference
+-use outputparsers, structured output generation
+-gemma3 llamafile model usage for offline
+-final setup creation, with basic UI
