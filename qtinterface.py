@@ -279,7 +279,7 @@ class AnalysisWorker(QObject):
                         if not api_key:
                             raise ValueError("GOOGLE_API_KEY not found in environment variables.")
 
-                        llm = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key) # Corrected parameter name
+                        llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key) # Corrected parameter name
 
                         all_files = [item for item in os.listdir(self.controller.folder_path)
                                      if os.path.isfile(os.path.join(self.controller.folder_path, item))]
