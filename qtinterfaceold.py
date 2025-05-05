@@ -47,36 +47,36 @@ class ThemeManager:
 
     # Light Theme Colors
     LIGHT = {
-        "bg_primary": "#f8f9fa",
+        "bg_primary": "#f5f5f5",
         "bg_secondary": "#ffffff",
-        "text_primary": "#2D3748",
-        "text_secondary": "#718096",
-        "accent": "#6C5CE7",
-        "accent_hover": "#5B4BD6",
-        "border": "#E2E8F0",
-        "success": "#48BB78",
-        "warning": "#F6AD55",
-        "error": "#ED64A6",
+        "text_primary": "#212121",
+        "text_secondary": "#757575",
+        "accent": "#2196F3",
+        "accent_hover": "#1976D2",
+        "border": "#e0e0e0",
+        "success": "#4CAF50",
+        "warning": "#FF9800",
+        "error": "#F44336",
         "card_bg": "#ffffff",
-        "disabled": "#CBD5E0",
-        "highlight": "#EBF4FF"
+        "disabled": "#bdbdbd",
+        "highlight": "#e3f2fd"
     }
 
     # Dark Theme Colors
     DARK = {
-        "bg_primary": "#1A202C",
-        "bg_secondary": "#2D3748",
-        "text_primary": "#F7FAFC",
-        "text_secondary": "#A0AEC0",
-        "accent": "#805AD5",
-        "accent_hover": "#6B46C1",
-        "border": "#4A5568",
-        "success": "#38A169",
-        "warning": "#DD6B20",
-        "error": "#E53E3E",
-        "card_bg": "#2D3748",
-        "disabled": "#718096",
-        "highlight": "#2C5282"
+        "bg_primary": "#121212",
+        "bg_secondary": "#1e1e1e",
+        "text_primary": "#ffffff",
+        "text_secondary": "#b0b0b0",
+        "accent": "#2196F3",
+        "accent_hover": "#64B5F6",
+        "border": "#333333",
+        "success": "#81C784",
+        "warning": "#FFB74D",
+        "error": "#E57373",
+        "card_bg": "#2d2d2d",
+        "disabled": "#616161",
+        "highlight": "#1e3a5f"
     }
 
     def __init__(self):
@@ -107,51 +107,31 @@ class ThemeManager:
         """Generate QSS stylesheet based on current theme"""
         c = self.colors
         return f"""
-        /* Base Styling */
         QWidget {{
             background-color: {c['bg_primary']};
             color: {c['text_primary']};
-            font-family: 'Segoe UI', 'Arial', sans-serif;
         }}
 
         QMainWindow, QDialog {{
             background-color: {c['bg_primary']};
         }}
 
-        /* Text Elements */
         QLabel {{
             color: {c['text_primary']};
             background-color: transparent;
         }}
 
-        QLabel[title="true"] {{
-            font-size: 18px;
-            font-weight: bold;
-        }}
-
-        QLabel[subtitle="true"] {{
-            color: {c['text_secondary']};
-            font-size: 14px;
-        }}
-
-        /* Modern Buttons */
         QPushButton {{
             background-color: {c['accent']};
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 4px;
+            padding: 6px 12px;
             font-weight: bold;
-            font-size: 13px;
-            min-width: 100px;
         }}
 
         QPushButton:hover {{
             background-color: {c['accent_hover']};
-        }}
-
-        QPushButton:pressed {{
-            background-color: {c['accent']};
         }}
 
         QPushButton:disabled {{
@@ -159,101 +139,45 @@ class ThemeManager:
             color: {c['text_secondary']};
         }}
 
-        QPushButton[secondary="true"] {{
-            background-color: transparent;
-            color: {c['accent']};
-            border: 2px solid {c['accent']};
-        }}
-
-        QPushButton[secondary="true"]:hover {{
-            background-color: {c['highlight']};
-        }}
-
-        /* Cards and Containers */
         QFrame {{
-            background-color: {c['bg_secondary']};
-            border-radius: 10px;
-            border: none;
-        }}
-
-        QFrame[card="true"] {{
-            background-color: {c['card_bg']};
-            border-radius: 12px;
-            padding: 20px;
-        }}
-
-        /* Tree and List Views */
-        QTreeWidget, QListWidget {{
-            background-color: {c['bg_secondary']};
-            border: none;
-            border-radius: 8px;
-            padding: 8px;
-        }}
-
-        QTreeWidget::item, QListWidget::item {{
-            padding: 8px;
-            margin: 2px 0px;
+            border: 1px solid {c['border']};
             border-radius: 4px;
+            background-color: {c['bg_secondary']};
         }}
 
-        QTreeWidget::item:hover, QListWidget::item:hover {{
+        QScrollArea, QTreeWidget {{
+            border: 1px solid {c['border']};
+            background-color: {c['bg_secondary']};
+        }}
+
+        QTreeWidget::item {{
+            padding: 4px;
+        }}
+
+        QTreeWidget::item:selected {{
             background-color: {c['highlight']};
         }}
 
-        QTreeWidget::item:selected, QListWidget::item:selected {{
-            background-color: {c['highlight']};
-            color: {c['text_primary']};
-        }}
-
-        /* Combo Box */
         QComboBox {{
             border: 1px solid {c['border']};
-            border-radius: 6px;
-            padding: 6px 12px;
+            border-radius: 4px;
+            padding: 4px;
             background-color: {c['bg_secondary']};
-            min-width: 6em;
         }}
 
         QComboBox::drop-down {{
             border: none;
-            width: 24px;
         }}
 
         QComboBox QAbstractItemView {{
             background-color: {c['bg_secondary']};
             border: 1px solid {c['border']};
-            border-radius: 6px;
-            selection-background-color: {c['highlight']};
         }}
 
-        /* Progress Indicators */
-        QProgressBar {{
-            border: none;
-            border-radius: 4px;
-            background-color: {c['border']};
-            height: 8px;
-            text-align: center;
-        }}
-
-        QProgressBar::chunk {{
-            background-color: {c['accent']};
-            border-radius: 4px;
-        }}
-
-        /* Input Fields */
-        QLineEdit {{
-            border: 1px solid {c['border']};
-            border-radius: 6px;
-            padding: 8px 12px;
+        QProgressDialog, QMessageBox {{
             background-color: {c['bg_secondary']};
-            selection-background-color: {c['highlight']};
         }}
 
-        QLineEdit:focus {{
-            border: 2px solid {c['accent']};
-        }}
-
-        /* Checkboxes */
         QCheckBox {{
             spacing: 8px;
         }}
@@ -261,49 +185,8 @@ class ThemeManager:
         QCheckBox::indicator {{
             width: 18px;
             height: 18px;
-            border-radius: 4px;
-            border: 1px solid {c['border']};
-        }}
-
-        QCheckBox::indicator:checked {{
-            background-color: {c['accent']};
-            border: 1px solid {c['accent']};
-        }}
-
-        /* Scrollbars */
-        QScrollBar:vertical {{
-            background: {c['bg_primary']};
-            width: 12px;
-            margin: 0px;
-        }}
-
-        QScrollBar::handle:vertical {{
-            background: {c['border']};
-            min-height: 20px;
-            border-radius: 6px;
-        }}
-
-        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-            height: 0px;
-        }}
-
-        QScrollBar:horizontal {{
-            background: {c['bg_primary']};
-            height: 12px;
-            margin: 0px;
-        }}
-
-        QScrollBar::handle:horizontal {{
-            background: {c['border']};
-            min-width: 20px;
-            border-radius: 6px;
-        }}
-
-        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-            width: 0px;
         }}
         """
-
 
 # --- Helper Functions ---
 
@@ -546,41 +429,6 @@ class OrganizeWorker(QObject):
                 base_target_dir = self.controller.folder_path
 
                 for item_name, contents in structure.items():
-                    # Special handling for _files_ key - don't create a _files_ folder
-                    if item_name == "_files_":
-                        # Move files directly to the current folder instead of creating a _files_ subfolder
-                        if isinstance(contents, list):
-                            current_folder_path = os.path.join(base_target_dir, current_rel_path)
-                            try:
-                                # Ensure the current folder exists
-                                if not os.path.exists(current_folder_path):
-                                    os.makedirs(current_folder_path)
-                                    print(f"Created folder: {current_folder_path}")
-
-                                # Move each file to the current folder
-                                for file_name in contents:
-                                    src_path = os.path.join(base_target_dir, file_name)
-                                    dst_path = os.path.join(current_folder_path, file_name)
-
-                                    if os.path.abspath(src_path) == os.path.abspath(dst_path):
-                                        print(f"Skipping {file_name}: Source and destination are the same")
-                                        continue
-
-                                    if os.path.exists(src_path) and os.path.isfile(src_path):
-                                        try:
-                                            print(f"Moving: {src_path} -> {dst_path}")
-                                            shutil.move(src_path, dst_path)
-                                            moved_count += 1
-                                        except Exception as e:
-                                            error_count += 1
-                                            error_messages.append(f"Move Error '{file_name}' to '{current_rel_path}': {e}")
-                                    else:
-                                        print(f"Warning: Source file not found or is not a file: {src_path}")
-                            except OSError as e:
-                                error_count += 1
-                                error_messages.append(f"Dir Error '{current_rel_path}': {e}")
-                        continue  # Skip the rest of the processing for _files_ key
-
                     new_rel_path = os.path.join(current_rel_path, item_name)
                     target_path = os.path.join(base_target_dir, new_rel_path)
 
@@ -911,9 +759,6 @@ class StartPage(BasePage):
         if self.progress_dialog and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         if self.analysis_thread and self.analysis_thread.isRunning():
-            # Note: Forcefully terminating threads is generally discouraged.
-            # A better approach would involve the worker checking a flag.
-            # For simplicity here, we just quit the thread. The worker might finish.
             self.analysis_thread.quit()
             self.analysis_thread.wait()
 
@@ -948,6 +793,7 @@ class AnalyzePage(BasePage):
         self.subtitle_label = QLabel("Folder: ")
         self.subtitle_label.setFont(self.FONT_LABEL)
         # self.subtitle_label.setStyleSheet("color: gray;")
+
         header_layout.addWidget(title)
         header_layout.addWidget(self.subtitle_label)
         main_layout.addLayout(header_layout)
@@ -1157,7 +1003,7 @@ class EditStructurePage(BasePage):
         tree_title.setFont(self.FONT_BODY_BOLD)
         add_category_btn = QPushButton("+ New Top-Level Category")
         add_category_btn.setFont(self.FONT_SMALL)
-        add_category_btn.setFixedHeight(45)
+        add_category_btn.setFixedHeight(25)
         add_category_btn.clicked.connect(self._add_new_category)
 
         tree_header_layout.addWidget(tree_title)
@@ -1233,20 +1079,7 @@ class EditStructurePage(BasePage):
         def add_items_recursive(parent_item, structure):
             if isinstance(structure, dict):
                 for key, value in sorted(structure.items()):
-                    # Special handling for _files_ key - don't show it in the UI
-                    if key == "_files_":
-                        # Add files directly to parent_item without showing "_files_" folder
-                        if isinstance(value, list):
-                            for filename in sorted(value):
-                                file_item = QTreeWidgetItem([filename])
-                                file_item.setData(0, Qt.UserRole, {"type": "file", "name": filename})
-                                # Enable dragging but disable editing for files
-                                file_item.setFlags(file_item.flags() | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
-                                file_item.setIcon(0, self.style().standardIcon(getattr(QStyle, "SP_FileIcon", QStyle.SP_CustomBase)))
-                                parent_item.addChild(file_item)
-                        continue  # Skip creating a folder for _files_
-                    
-                    # Create folder item for regular folders
+                    # Create folder item
                     folder_item = QTreeWidgetItem([key])
                     folder_item.setData(0, Qt.UserRole, {"type": "folder", "path": key}) # Store type and name
                     # Allow renaming, dragging, and dropping
@@ -1425,9 +1258,8 @@ class EditStructurePage(BasePage):
             # Allow renaming, dragging, and dropping
             new_item.setFlags(new_item.flags() | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             new_item.setIcon(0, self.style().standardIcon(QStyle.SP_DirIcon))
-            new_item.setTextAlignment(0, Qt.AlignVCenter | Qt.AlignLeft)
             self.structure_tree.addTopLevelItem(new_item)
-            self.structure_tree.setColumnWidth(0, 250)
+
             # Update internal structure
             self.update_structure_from_tree()
             show_info_message("Added", f"Category '{new_name}' added.")
@@ -1440,36 +1272,35 @@ class EditStructurePage(BasePage):
         # We'll build the structure directly in the temp_root_dict variable
 
         def build_dict_recursive(parent_dict, tree_item):
-            has_files = False
-            files_list = []
-            
-            # First pass: collect all files and create subfolders
             for i in range(tree_item.childCount()):
                 child_item = tree_item.child(i)
                 item_data = child_item.data(0, Qt.UserRole)
                 item_name = child_item.text(0)
-                
-                # Skip items with no data or invalid names
-                if not item_data or not item_name or not item_name.strip():
-                    continue
-                    
-                item_type = item_data.get("type")
-                
-                # Only process items with a valid type
+                item_type = item_data.get("type") if item_data else "unknown"
+
                 if item_type == "folder":
                     # Create a new dict for the folder and recurse
                     sub_dict = {}
                     parent_dict[item_name] = sub_dict
                     build_dict_recursive(sub_dict, child_item)
                 elif item_type == "file":
-                    # Only add files with valid names
-                    if item_name and item_name.strip():
-                        has_files = True
-                        files_list.append(item_name)
-            
-            # Only add _files_ if there are actual files and this isn't a renamed folder
-            if has_files and files_list and len(files_list) > 0:
-                parent_dict["_files_"] = files_list
+                    # Files need to be collected in lists under their parent folder key
+                    # This requires adjusting the structure slightly if mixing dicts and lists
+                    # For simplicity, let's assume folders contain dicts (subfolders) or lists (files)
+                    # Find the list to add to, creating if necessary
+                    if not isinstance(parent_dict, list):
+                         # If the parent isn't a list, we might be adding the first file
+                         # Or this structure is mixed. Let's default to adding to a list
+                         # associated with the parent folder's name if possible.
+                         # This logic gets complex quickly without a model.
+                         # --- Simplified: Assume files are added to a list ---
+                         # This won't perfectly rebuild the original nested structure if it mixed types.
+                         if "_files_" not in parent_dict:
+                              parent_dict["_files_"] = []
+                         parent_dict["_files_"].append(item_name)
+
+                    else: # Parent is already a list (e.g., under analysis_result structure)
+                         parent_dict.append(item_name)
 
 
         # Build the structure starting from the invisible root
@@ -1477,33 +1308,22 @@ class EditStructurePage(BasePage):
         temp_root_dict = {}
         build_dict_recursive(temp_root_dict, root)
 
-        # Clean up the temporary structure by removing empty folders and _files_ entries
-        def clean_structure(structure):
-            if isinstance(structure, dict):
-                # Remove empty _files_ lists
-                if "_files_" in structure and (not structure["_files_"] or len(structure["_files_"]) == 0):
-                    del structure["_files_"]
-                
-                # Recursively clean all sub-dictionaries
-                for key, value in list(structure.items()):
-                    if isinstance(value, dict):
-                        clean_structure(value)
-                        # If the sub-dictionary became empty after cleaning, remove it
-                        if not value:
-                            del structure[key]
-        
-        # Apply cleaning to remove empty folders and _files_ entries
-        clean_structure(temp_root_dict)
-
-        # The final structure is the cleaned version
+        # Clean up the temporary structure (e.g., remove "_files_" keys if needed)
+        # This part depends heavily on the desired final structure format.
+        # Let's assume the top level keys are the main categories.
         final_structure = temp_root_dict
 
-        print("Rebuilt structure from tree:", final_structure)
+        # --- Refinement needed here based on desired output format ---
+        # The recursive function above needs adjustment to correctly create
+        # the list-based or dict-based structure expected by organize_files.
+        # For now, we'll update the controller with the potentially imperfect structure.
+
+        print("Rebuilt structure from tree (may need refinement):", final_structure)
         self.controller.generated_structure = final_structure
-        # Clear analysis result if structure was edited
-        self.controller.analysis_result = {}
         # If the original was analysis_result, update that instead/as well? Needs clarification.
         # For now, always update generated_structure, assuming user edits create the desired final form.
+        self.controller.analysis_result = {} # Clear analysis result if structure was edited
+
 
     def confirm(self):
         """Update structure from tree and proceed to confirmation."""
@@ -1539,12 +1359,12 @@ class EditStructurePage(BasePage):
 class ConfirmPage(BasePage):
      def setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignCenter) # Center everything
 
         card = QFrame()
         card.setFrameShape(QFrame.StyledPanel)
         # card.setStyleSheet("QFrame { background-color: #f0f0f0; border-radius: 10px; max-width: 400px; }")
-        card.setMaximumWidth(450)
+        card.setMaximumWidth(450) # Limit width
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(25, 25, 25, 25)
         card_layout.setAlignment(Qt.AlignCenter)
