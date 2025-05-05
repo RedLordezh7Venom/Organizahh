@@ -47,36 +47,36 @@ class ThemeManager:
 
     # Light Theme Colors
     LIGHT = {
-        "bg_primary": "#f5f5f5",
+        "bg_primary": "#f8f9fa",
         "bg_secondary": "#ffffff",
-        "text_primary": "#212121",
-        "text_secondary": "#757575",
-        "accent": "#2196F3",
-        "accent_hover": "#1976D2",
-        "border": "#e0e0e0",
-        "success": "#4CAF50",
-        "warning": "#FF9800",
-        "error": "#F44336",
+        "text_primary": "#2D3748",
+        "text_secondary": "#718096",
+        "accent": "#6C5CE7",
+        "accent_hover": "#5B4BD6",
+        "border": "#E2E8F0",
+        "success": "#48BB78",
+        "warning": "#F6AD55",
+        "error": "#ED64A6",
         "card_bg": "#ffffff",
-        "disabled": "#bdbdbd",
-        "highlight": "#e3f2fd"
+        "disabled": "#CBD5E0",
+        "highlight": "#EBF4FF"
     }
 
     # Dark Theme Colors
     DARK = {
-        "bg_primary": "#121212",
-        "bg_secondary": "#1e1e1e",
-        "text_primary": "#ffffff",
-        "text_secondary": "#b0b0b0",
-        "accent": "#2196F3",
-        "accent_hover": "#64B5F6",
-        "border": "#333333",
-        "success": "#81C784",
-        "warning": "#FFB74D",
-        "error": "#E57373",
-        "card_bg": "#2d2d2d",
-        "disabled": "#616161",
-        "highlight": "#1e3a5f"
+        "bg_primary": "#1A202C",
+        "bg_secondary": "#2D3748",
+        "text_primary": "#F7FAFC",
+        "text_secondary": "#A0AEC0",
+        "accent": "#805AD5",
+        "accent_hover": "#6B46C1",
+        "border": "#4A5568",
+        "success": "#38A169",
+        "warning": "#DD6B20",
+        "error": "#E53E3E",
+        "card_bg": "#2D3748",
+        "disabled": "#718096",
+        "highlight": "#2C5282"
     }
 
     def __init__(self):
@@ -107,31 +107,51 @@ class ThemeManager:
         """Generate QSS stylesheet based on current theme"""
         c = self.colors
         return f"""
+        /* Base Styling */
         QWidget {{
             background-color: {c['bg_primary']};
             color: {c['text_primary']};
+            font-family: 'Segoe UI', 'Arial', sans-serif;
         }}
 
         QMainWindow, QDialog {{
             background-color: {c['bg_primary']};
         }}
 
+        /* Text Elements */
         QLabel {{
             color: {c['text_primary']};
             background-color: transparent;
         }}
 
+        QLabel[title="true"] {{
+            font-size: 18px;
+            font-weight: bold;
+        }}
+
+        QLabel[subtitle="true"] {{
+            color: {c['text_secondary']};
+            font-size: 14px;
+        }}
+
+        /* Modern Buttons */
         QPushButton {{
             background-color: {c['accent']};
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
+            border-radius: 8px;
+            padding: 10px 20px;
             font-weight: bold;
+            font-size: 13px;
+            min-width: 100px;
         }}
 
         QPushButton:hover {{
             background-color: {c['accent_hover']};
+        }}
+
+        QPushButton:pressed {{
+            background-color: {c['accent']};
         }}
 
         QPushButton:disabled {{
@@ -139,45 +159,101 @@ class ThemeManager:
             color: {c['text_secondary']};
         }}
 
-        QFrame {{
-            border: 1px solid {c['border']};
-            border-radius: 4px;
-            background-color: {c['bg_secondary']};
+        QPushButton[secondary="true"] {{
+            background-color: transparent;
+            color: {c['accent']};
+            border: 2px solid {c['accent']};
         }}
 
-        QScrollArea, QTreeWidget {{
-            border: 1px solid {c['border']};
-            background-color: {c['bg_secondary']};
-        }}
-
-        QTreeWidget::item {{
-            padding: 4px;
-        }}
-
-        QTreeWidget::item:selected {{
+        QPushButton[secondary="true"]:hover {{
             background-color: {c['highlight']};
         }}
 
+        /* Cards and Containers */
+        QFrame {{
+            background-color: {c['bg_secondary']};
+            border-radius: 10px;
+            border: none;
+        }}
+
+        QFrame[card="true"] {{
+            background-color: {c['card_bg']};
+            border-radius: 12px;
+            padding: 20px;
+        }}
+
+        /* Tree and List Views */
+        QTreeWidget, QListWidget {{
+            background-color: {c['bg_secondary']};
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+        }}
+
+        QTreeWidget::item, QListWidget::item {{
+            padding: 8px;
+            margin: 2px 0px;
+            border-radius: 4px;
+        }}
+
+        QTreeWidget::item:hover, QListWidget::item:hover {{
+            background-color: {c['highlight']};
+        }}
+
+        QTreeWidget::item:selected, QListWidget::item:selected {{
+            background-color: {c['highlight']};
+            color: {c['text_primary']};
+        }}
+
+        /* Combo Box */
         QComboBox {{
             border: 1px solid {c['border']};
-            border-radius: 4px;
-            padding: 4px;
+            border-radius: 6px;
+            padding: 6px 12px;
             background-color: {c['bg_secondary']};
+            min-width: 6em;
         }}
 
         QComboBox::drop-down {{
             border: none;
+            width: 24px;
         }}
 
         QComboBox QAbstractItemView {{
             background-color: {c['bg_secondary']};
             border: 1px solid {c['border']};
+            border-radius: 6px;
+            selection-background-color: {c['highlight']};
         }}
 
-        QProgressDialog, QMessageBox {{
+        /* Progress Indicators */
+        QProgressBar {{
+            border: none;
+            border-radius: 4px;
+            background-color: {c['border']};
+            height: 8px;
+            text-align: center;
+        }}
+
+        QProgressBar::chunk {{
+            background-color: {c['accent']};
+            border-radius: 4px;
+        }}
+
+        /* Input Fields */
+        QLineEdit {{
+            border: 1px solid {c['border']};
+            border-radius: 6px;
+            padding: 8px 12px;
             background-color: {c['bg_secondary']};
+            selection-background-color: {c['highlight']};
         }}
 
+        QLineEdit:focus {{
+            border: 2px solid {c['accent']};
+        }}
+
+        /* Checkboxes */
         QCheckBox {{
             spacing: 8px;
         }}
@@ -185,8 +261,49 @@ class ThemeManager:
         QCheckBox::indicator {{
             width: 18px;
             height: 18px;
+            border-radius: 4px;
+            border: 1px solid {c['border']};
+        }}
+
+        QCheckBox::indicator:checked {{
+            background-color: {c['accent']};
+            border: 1px solid {c['accent']};
+        }}
+
+        /* Scrollbars */
+        QScrollBar:vertical {{
+            background: {c['bg_primary']};
+            width: 12px;
+            margin: 0px;
+        }}
+
+        QScrollBar::handle:vertical {{
+            background: {c['border']};
+            min-height: 20px;
+            border-radius: 6px;
+        }}
+
+        QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+            height: 0px;
+        }}
+
+        QScrollBar:horizontal {{
+            background: {c['bg_primary']};
+            height: 12px;
+            margin: 0px;
+        }}
+
+        QScrollBar::handle:horizontal {{
+            background: {c['border']};
+            min-width: 20px;
+            border-radius: 6px;
+        }}
+
+        QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+            width: 0px;
         }}
         """
+
 
 # --- Helper Functions ---
 
@@ -759,6 +876,9 @@ class StartPage(BasePage):
         if self.progress_dialog and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         if self.analysis_thread and self.analysis_thread.isRunning():
+            # Note: Forcefully terminating threads is generally discouraged.
+            # A better approach would involve the worker checking a flag.
+            # For simplicity here, we just quit the thread. The worker might finish.
             self.analysis_thread.quit()
             self.analysis_thread.wait()
 
@@ -793,7 +913,6 @@ class AnalyzePage(BasePage):
         self.subtitle_label = QLabel("Folder: ")
         self.subtitle_label.setFont(self.FONT_LABEL)
         # self.subtitle_label.setStyleSheet("color: gray;")
-
         header_layout.addWidget(title)
         header_layout.addWidget(self.subtitle_label)
         main_layout.addLayout(header_layout)
@@ -1003,7 +1122,7 @@ class EditStructurePage(BasePage):
         tree_title.setFont(self.FONT_BODY_BOLD)
         add_category_btn = QPushButton("+ New Top-Level Category")
         add_category_btn.setFont(self.FONT_SMALL)
-        add_category_btn.setFixedHeight(25)
+        add_category_btn.setFixedHeight(45)
         add_category_btn.clicked.connect(self._add_new_category)
 
         tree_header_layout.addWidget(tree_title)
@@ -1258,8 +1377,9 @@ class EditStructurePage(BasePage):
             # Allow renaming, dragging, and dropping
             new_item.setFlags(new_item.flags() | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled)
             new_item.setIcon(0, self.style().standardIcon(QStyle.SP_DirIcon))
+            new_item.setTextAlignment(0, Qt.AlignVCenter | Qt.AlignLeft)
             self.structure_tree.addTopLevelItem(new_item)
-
+            self.structure_tree.setColumnWidth(0, 250)
             # Update internal structure
             self.update_structure_from_tree()
             show_info_message("Added", f"Category '{new_name}' added.")

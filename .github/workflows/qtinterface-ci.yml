@@ -1,100 +1,239 @@
-name: QtInterface CI
+import sys
+import os
+import json
+import time
+from pathlib import Path
+from typing import Dict, List, Any, Optional, Union
 
-on:
-  push:
-    branches: [ main, master, develop ]
-    paths:
-      - 'qtinterface.py'
-      - 'test_qtinterface*.py'
-      - 'requirements.txt'
-      - '.github/workflows/qtinterface-ci.yml'
-  pull_request:
-    branches: [ main, master ]
-    paths:
-      - 'qtinterface.py'
-      - 'test_qtinterface*.py'
-      - 'requirements.txt'
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+    QLabel, QPushButton, QFileDialog, QStackedWidget, QProgressBar, 
+    QTreeWidget, QTreeWidgetItem, QLineEdit, QDialog, QDialogButtonBox,
+    QCheckBox, QFrame, QScrollArea, QSizePolicy
+)
+from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEasingCurve, Signal, Slot, QTimer
+from PySide6.QtGui import QIcon, QColor, QPalette, QFont, QFontDatabase
 
-jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ['3.10', '3.11', '3.12']
+class ThemeManager:
+    """Manages application themes with light/dark modes and styling"""
+    def __init__(self):
+        self.current_theme = "light"
+        self.themes = {
+            "light": {
+                "bg_primary": "#f5f5f7",
+                "bg_secondary": "#ffffff",
+                "text_primary": "#000000",
+                "text_secondary": "#666666",
+                "accent": "#007aff",
+                "border": "#e0e0e5",
+                "card": "#ffffff",
+                "success": "#34C759",
+                "warning": "#FF9500",
+                "error": "#FF3B30"
+            },
+            "dark": {
+                "bg_primary": "#1e1e1e",
+                "bg_secondary": "#2c2c2e",
+                "text_primary": "#ffffff",
+                "text_secondary": "#aaaaaa",
+                "accent": "#0a84ff",
+                "border": "#3a3a3c",
+                "card": "#2c2c2e",
+                "success": "#30D158",
+                "warning": "#FF9F0A",
+                "error": "#FF453A"
+            }
+        }
 
-    steps:
-    - uses: actions/checkout@v3
+    def toggle_theme(self):
+        """Switch between light and dark themes"""
+        self.current_theme = "dark" if self.current_theme == "light" else "light"
+        return self.current_theme
+
+    def get_stylesheet(self):
+        """Generate complete stylesheet for current theme"""
+        colors = self.themes[self.current_theme]
+        return f"""
+        /* Main Window */
+        QMainWindow, QDialog {{
+            background-color: {colors['bg_primary']};
+            color: {colors['text_primary']};
+        }}
+        
+        /* Widgets */
+        QWidget {{
+            background-color: {colors['bg_primary']};
+            color: {colors['text_primary']};
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 14px;
+        }}
+        
+        /* Cards */
+        QFrame.card {{
+            background-color: {colors['card']};
+            border-radius: 12px;
+            border: 1px solid {colors['border']};
+            padding: 15px;
+        }}
+        
+        /* Buttons */
+        QPushButton {{
+            background-color: {colors['accent']};
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            min-width: 80px;
+            font-weight: 600;
+            border: none;
+        }}
+        
+        QPushButton:hover {{
+            background-color: {colors['accent']};
+            opacity: 0.9;
+        }}
+        
+        QPushButton:pressed {{
+            background-color: {colors['accent']};
+            opacity: 0.8;
+        }}
+        
+        /* Text Styles */
+        QLabel {{
+            color: {colors['text_primary']};
+        }}
+        
+        QLabel.secondary {{
+            color: {colors['text_secondary']};
+            font-size: 13px;
+        }}
+        
+        /* Tree Widget */
+        QTreeWidget {{
+            background-color: {colors['bg_secondary']};
+            border: 1px solid {colors['border']};
+            border-radius: 6px;
+        }}
+        
+        /* Status Colors */
+        .success {{
+            color: {colors['success']};
+        }}
+        
+        .warning {{
+            color: {colors['warning']};
+        }}
+        
+        .error {{
+            color: {colors['error']};
+        }}
+        """
+
+class FileOrganizerApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.theme_manager = ThemeManager()
+        self.setup_ui()
+        self.apply_theme()
+
+    def setup_ui(self):
+        """Initialize all UI components"""
+        self.setWindowTitle("File Organizer")
+        self.resize(1100, 750)
+        
+        # Central Widget
+        central_widget = QWidget()
+        central_widget.setObjectName("centralWidget")
+        self.setCentralWidget(central_widget)
+        
+        # Main Layout
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(15)
+        
+        # Header with theme toggle
+        header = QWidget()
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        
+        title = QLabel("File Organizer")
+        title.setStyleSheet("font-size: 18px; font-weight: bold;")
+        
+        self.theme_button = QPushButton("Toggle Dark Mode" if self.theme_manager.current_theme == "light" else "Toggle Light Mode")
+        self.theme_button.clicked.connect(self.toggle_theme)
+        
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header_layout.addWidget(self.theme_button)
+        main_layout.addWidget(header)
+        
+        # Main Content Area
+        content_frame = QFrame()
+        content_frame.setObjectName("contentFrame")
+        content_frame.setStyleSheet("QFrame#contentFrame { border: none; }")
+        content_layout = QVBoxLayout(content_frame)
+        
+        # Add your specific UI components here...
+        
+        main_layout.addWidget(content_frame, 1)
+        
+    def toggle_theme(self):
+        """Handle theme toggle and update button text"""
+        self.theme_manager.toggle_theme()
+        self.theme_button.setText("Toggle Dark Mode" if self.theme_manager.current_theme == "light" else "Toggle Light Mode")
+        self.apply_theme()
+
+    def apply_theme(self):
+        """Apply the current theme to the application"""
+        self.setStyleSheet(self.theme_manager.get_stylesheet())
+
+    def safe_populate_data(self, data):
+        """
+        Robust data population handling multiple input formats:
+        - Dict: {category: {subcategory: [files]}}
+        - Dict: {category: [files]} 
+        - List: [files]
+        """
+        try:
+            if not data:
+                return
+                
+            if isinstance(data, dict):
+                for category, content in data.items():
+                    if isinstance(content, dict):
+                        # Nested structure
+                        for subcategory, files in content.items():
+                            if isinstance(files, (list, tuple)):
+                                self.process_files(category, subcategory, files)
+                    elif isinstance(content, (list, tuple)):
+                        # Flat structure
+                        self.process_files(category, None, content)
+            elif isinstance(data, (list, tuple)):
+                # Simple list
+                self.process_files("Files", None, data)
+                
+        except Exception as e:
+            print(f"Data population error: {str(e)}")
+            # Add error handling UI feedback if needed
+
+    def process_files(self, category, subcategory, files):
+        """Process a batch of files with proper type checking"""
+        if not isinstance(files, (list, tuple)):
+            return
+            
+        print(f"Processing {len(files)} files in {category}")
+        if subcategory:
+            print(f"Subcategory: {subcategory}")
+            
+        # Add your file processing logic here
+        # This is where you'd update the UI with the file data
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
     
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        
-    - name: Install Linux dependencies
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 libxkbcommon-x11-0
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-cov pytest-qt flake8
-        pip install -r requirements.txt
-        
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 qtinterface.py --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings
-    #     flake8 qtinterface.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        
-    - name: Test with pytest on Linux
-      if: runner.os == 'Linux'
-      run: |
-        xvfb-run --auto-servernum pytest test_qtinterface*.py -v --cov=qtinterface
-        
-    - name: Test with pytest on Windows/macOS
-      if: runner.os != 'Linux'
-      run: |
-        pytest test_qtinterface*.py -v --cov=qtinterface
-        
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: qtinterface
-        name: codecov-qtinterface
-
-  build:
-    needs: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        python-version: ['3.10']
-        
-    steps:
-    - uses: actions/checkout@v3
+    # Set application style and attributes
+    app.setStyle("Fusion")
+    app.setWindowIcon(QIcon("icon.png"))  # Add your icon if available
     
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller
-        pip install -r requirements.txt
-        
-    - name: Build with PyInstaller
-      run: |
-        pyinstaller --name=qtinterface --windowed --onefile qtinterface.py
-        
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: qtinterface-${{ runner.os }}
-    #     path: dist/
+    window = FileOrganizerApp()
+    window.show()
+    sys.exit(app.exec())
