@@ -60,7 +60,7 @@ def initialize_ollama(max_retries=3, retry_delay=2):
     for attempt in range(max_retries):
         try:
             print(f"Initializing Ollama (attempt {attempt+1}/{max_retries})...")
-            ollama_llm = OllamaLLM(model="gemma3:1b-it-q8_0")
+            ollama_llm = OllamaLLM(model="gemma3:1b-it-q8_0",temperature=0.3)
             
             # Test the connection with a simple query
             print("Testing Ollama connection...")
