@@ -3,16 +3,13 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from listdir import list_files_and_folders
 import os
-
-
-directory = "D:/Users/prabh/Downloads - Copy"
-
-files_and_folders = list_files_and_folders(directory)
-
 import json
 
-# Initialize Google GenAI model (replace with the actual setup for Google GenAI)
-llm = GoogleGenerativeAI(model="gemini-2.0-flash", api_key="")
+directory = "D:/Users/prabh/Downloads - Copy"
+files_and_folders = list_files_and_folders(directory)
+
+api_key = os.getenv('GOOGLE_API_KEY')
+llm = GoogleGenerativeAI(model="gemini-2.0-flash", api_key=api_key)
 prompt = r"""
 You are given a list of files and folders from a directory:
 {files_and_folders}
@@ -37,14 +34,20 @@ Group similar files together under the appropriate categories. The structure sho
     }}
   }}
 }}
-"""
-#add chunking for huge directories
+""" 
+chain = PromptTemplate.from_template(prompt) | llm
 
-# Use LangChain to interact with Google GenAI
-chain = LLMChain(llm=llm, prompt=PromptTemplate.from_template(prompt))
-# Pass the 'files_and_folders' variable as input to the chain
-response = chain.run({"files_and_folders": files_and_folders})
-response = response[7:-4]
-generated_json = json.loads(response)
+response = chain.invoke({"files_and_folders": files_and_folders})
+ 
+try:
+    generated_json = json.loads(response)
+except json.JSONDecodeError:
+    # Try to extract JSON from the response if extra text is present
+    import re
+    match = re.search(r"\{.*\}", response, re.DOTALL)
+    if match:
+        generated_json = json.loads(match.group(0))
+    else:
+        raise
 
 print(json.dumps(generated_json, indent=2))
