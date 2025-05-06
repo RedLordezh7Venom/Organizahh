@@ -39,7 +39,7 @@ except ImportError:
 
 load_dotenv()
 
-APP_NAME = "Smart File Organizer"
+APP_NAME = "OrganizAh"
 
 # --- Theme Management ---
 class ThemeManager:
