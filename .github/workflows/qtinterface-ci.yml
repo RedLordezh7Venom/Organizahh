@@ -56,6 +56,8 @@ jobs:
           libxcb-xkb1 \
           libxkbcommon-x11-0
 
-    - name: Run app.py with xvfb
+    - name: Run app.py with xvfb (CI mode)
+      env:
+        CI: "true"
       run: |
         xvfb-run --auto-servernum -- python app.py
