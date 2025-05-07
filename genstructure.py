@@ -39,7 +39,7 @@ Group similar files together under the appropriate categories. The structure sho
 """ 
 chain = PromptTemplate.from_template(prompt) | llm
 
-response = chain.invoke({"files_and_folders": files_and_folders})
+response = chain.invoke({"files_and_folders": files_and_ folders})
  
 try:
     generated_json = json.loads(response)
