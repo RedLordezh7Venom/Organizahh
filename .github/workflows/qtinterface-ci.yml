@@ -1,61 +1,24 @@
-name: Run app.py CI
-
-on:
-  push:
-    branches: [ main, master, develop ]
-    paths:
-      - 'app.py'
-      - 'requirements.txt'
-      - '.github/workflows/qtinterface-ci.yml'
-  pull_request:
-    branches: [ main, master ]
-    paths:
-      - 'app.py'
-      - 'requirements.txt'
-
 jobs:
   run-app:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cdrx/pyqt5:latest  # Qt + Python preinstalled
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Cache pip
+      uses: actions/cache@v4
       with:
-        python-version: '3.11'
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install Qt and xvfb dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y xvfb \
-          libxcb-xinerama0 \
-          libxkbcommon-x11-0 \
-          libxcb1 \
-          libxcb-util1 \
-          libx11-xcb1 \
-          libglu1-mesa \
-          libxrender1 \
-          libxi6 \
-          libsm6 \
-          libxext6 \
-          libxcb-icccm4 \
-          libxcb-image0 \
-          libxcb-keysyms1 \
-          libxcb-randr0 \
-          libxcb-render-util0 \
-          libxcb-shape0 \
-          libxcb-sync1 \
-          libxcb-xfixes0 \
-          libxcb-xinerama0 \
-          libxcb-xkb1 \
-          libxkbcommon-x11-0
-
-    - name: Run app.py with xvfb
-      run: |
-        xvfb-run --auto-servernum -- python app.py
+    - name: Run app.py
+      run: xvfb-run --auto-servernum -- python app.py
