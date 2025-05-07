@@ -30,10 +30,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install Qt and xvfb dependencies
+    - name: Install Qt dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb \
+        sudo apt-get install -y \
           libxcb-xinerama0 \
           libxkbcommon-x11-0 \
           libxcb1 \
@@ -56,8 +56,9 @@ jobs:
           libxcb-xkb1 \
           libxkbcommon-x11-0
 
-    - name: Run app.py with xvfb (CI mode)
+    - name: Run app.py with Qt offscreen platform
       env:
+        QT_QPA_PLATFORM: offscreen
         CI: "true"
       run: |
-        xvfb-run --auto-servernum -- python app.py
+        python app.py
