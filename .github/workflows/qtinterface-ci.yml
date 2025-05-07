@@ -1,24 +1,32 @@
+name: Run app.py CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'app.py'
+      - 'requirements.txt'
+      - '.github/workflows/qtinterface-ci.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'app.py'
+      - 'requirements.txt'
+
 jobs:
   run-app:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/cdrx/pyqt5:latest  # Qt + Python preinstalled
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: Cache pip
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip dependencies
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run app.py
-      run: xvfb-run --auto-servernum -- python app.py
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt')
