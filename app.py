@@ -425,14 +425,14 @@ class AnalysisWorker(QObject):
                         {files_batch}
                         """
                         prompt = PromptTemplate.from_template(prompt_template_str)
-                        chain = LLMChain(llm=llm, prompt=prompt)
+                        chain = prompt | llm
 
                         for batch_index, files_batch in enumerate(batches):
                             update_status(f"Processing batch {batch_index+1}/{len(batches)}...")
                             files_batch_str = "\n".join(files_batch) # Pass as a string list
 
                             response = chain.invoke({"files_batch": files_batch_str}) # Use invoke for newer LangChain
-                            llm_output = response.get('text', '') # Extract text response
+                            llm_output = response # Extract text response
 
                             # Clean up potential markdown fences
                             if "```json" in llm_output:
