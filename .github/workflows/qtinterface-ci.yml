@@ -30,10 +30,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install Qt dependencies
+    - name: Install Qt and xvfb dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
+        sudo apt-get install -y xvfb \
           libxcb-xinerama0 \
           libxkbcommon-x11-0 \
           libxcb1 \
@@ -56,6 +56,6 @@ jobs:
           libxcb-xkb1 \
           libxkbcommon-x11-0
 
-    - name: Run app.py
+    - name: Run app.py with xvfb
       run: |
-        python app.py
+        xvfb-run --auto-servernum -- python app.py
