@@ -4,6 +4,8 @@ from langchain.chains import LLMChain
 from listdir import list_files_and_folders
 import os
 import json
+from dotenv import load_dotenv
+load_dotenv()
 
 directory = "D:/Users/prabh/Downloads - Copy"
 files_and_folders = list_files_and_folders(directory)

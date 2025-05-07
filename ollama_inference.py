@@ -10,7 +10,7 @@ def list_files_and_folders(directory):
     return os.listdir(directory)
 
 # Directory to analyze
-directory = "D:/Users/prabh/Downloads"
+directory = "C:/Users/prabh/Downloads" 
 
 # Get files and folders
 try:
@@ -21,36 +21,25 @@ except Exception as e:
     sys.exit(1)
 
 # Limit the number of files to process (to avoid overwhelming the model)
-MAX_FILES = 100
+MAX_FILES = 200
 if len(files_and_folders) > MAX_FILES:
     print(f"Limiting to {MAX_FILES} files for processing")
     files_and_folders = files_and_folders[:MAX_FILES]
 
 # Create the prompt template with properly escaped curly braces
 prompt_template = PromptTemplate.from_template("""
-You are given a list of files and folders from a directory:
-{files_and_folders}
+You are an expert file organizer. Given a list of filenames  :  {files_and_folders} from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
+                        The output MUST be ONLY a valid JSON object, starting with {{ and ending with }}. Do not include any explanations, markdown formatting (like ```json), or other text outside the JSON structure.
+                        Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
 
-Your task is to generate a JSON structure that organizes the files into topics and subtopics. 
-Give the output json only, not any other text.
-Group similar files together under the appropriate categories. The structure should look like this:
+                        {{
+                          "Topic_1": {{
+                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
+                            "Subtopic_2": [ "imageA.jpg" ]
+                          }},
+                          "Topic_2": [ "archive.zip", "installer.exe" ]
+                        }}
 
-{{
-  "Topic_1": {{
-    "Subtopic_1": {{
-      "file1.txt": "document",
-      "file2.pdf": "document"
-    }},
-    "Subtopic_2": {{
-      "file3.zip": "archive"
-    }}
-  }},
-  "Topic_2": {{
-    "Subtopic_1": {{
-      "file4.exe": "installer"
-    }}
-  }}
-}}
 """)
 
 # Function to initialize Ollama with retry logic
@@ -60,7 +49,7 @@ def initialize_ollama(max_retries=3, retry_delay=2):
     for attempt in range(max_retries):
         try:
             print(f"Initializing Ollama (attempt {attempt+1}/{max_retries})...")
-            ollama_llm = OllamaLLM(model="gemma3:1b-it-q8_0",temperature=0.3)
+            ollama_llm = OllamaLLM(model="llama3.1:8b",temperature=0.3)
             
             # Test the connection with a simple query
             print("Testing Ollama connection...")

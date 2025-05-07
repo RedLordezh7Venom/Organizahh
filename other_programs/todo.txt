@@ -1,0 +1,5 @@
+to make the following changes before final app:
+-done : use groq for faster inference : stash (gemini 2.0 is working better)
+-no need  : use outputparsers, structured output generation
+-on it  : gemma3 llamafile model usage for offline : use ollama instead (accuracy issues)
+-final step remaining,get first prototype  : final setup creation, with basic UI

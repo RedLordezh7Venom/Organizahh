@@ -401,14 +401,15 @@ class AnalysisWorker(QObject):
                         all_files = [item for item in os.listdir(self.controller.folder_path)
                                      if os.path.isfile(os.path.join(self.controller.folder_path, item))]
 
-                        batch_size = 200 # Keep batching
+                        batch_size = int(len(all_files)/2)
+                        batch_size = min(max(batch_size,200),500) #more than 200 but less than 500
                         batches = [all_files[i:i + batch_size] for i in range(0, len(all_files), batch_size)]
                         update_status(f"Processing {len(all_files)} files in {len(batches)} batches...")
 
                         temp_generated_structure = {}
 
                         prompt_template_str = r"""
-                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into topical folders and subfolders.
+                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
                         The output MUST be ONLY a valid JSON object, starting with {{ and ending with }}. Do not include any explanations, markdown formatting (like ```json), or other text outside the JSON structure.
                         Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
 

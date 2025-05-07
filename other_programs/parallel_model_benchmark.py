@@ -16,15 +16,13 @@ from langchain_community.llms.llamafile import Llamafile
 from langchain_community.llms.ollama import Ollama
 from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnablePassthrough
-
-# Import directory listing function
-from listdir import list_files_and_folders
-
+def list_files_and_folders(directory):
+    return os.listdir(directory)
 # Load environment variables
 load_dotenv()
 
 # Directory to analyze
-directory = "C:/Users/prabh/Downloads"
+directory = r"D:\Users\prabh\Downloads"
 
 # Get files and folders
 files_and_folders = list_files_and_folders(directory)
@@ -139,7 +137,7 @@ def run_benchmark():
         groq_api_key = os.getenv("GROQ_API_KEY")
         groq_model = ChatGroq(
             api_key=groq_api_key,
-            model_name="gemma2-9b-it"
+            model_name="llama-3.3-70b-versatile"
         )
     except Exception as e:
         print(f"Error initializing Groq: {e}")
@@ -170,7 +168,7 @@ def run_benchmark():
     # Create list of models to run
     models_to_run = []
     if groq_model:
-        models_to_run.append(("Groq (gemma2-9b-it)", groq_model))
+        models_to_run.append(("Groq (llama)", groq_model))
     if gemini_model:
         models_to_run.append(("Gemini 2.0 Flash", gemini_model))
     if llamafile_model:

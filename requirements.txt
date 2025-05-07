@@ -1,12 +1,12 @@
-requests
-
-customtkinter
-Pillow
-
 langchain-google-genai
 langchain
 google-generativeai
 langchain-ollama
+ollama
+langchain-groq
 python-dotenv
-
+PyQt5
 pyinstaller
+# requests
+# customtkinter
+# Pillow
