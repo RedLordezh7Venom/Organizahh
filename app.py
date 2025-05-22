@@ -1851,6 +1851,13 @@ class FileOrganizerApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # Set default window icon
+        self.setWindowIcon(QIcon("assets/logo.ico"))
+        # Optionally, you can store the icons for later use
+        self.icon_default = QIcon("assets/logo.ico")
+        self.icon_blue = QIcon("assets/logo_blue.ico")
+        self.icon_green = QIcon("assets/logo_green.ico")
+
         self.setWindowTitle(APP_NAME)
         self.setGeometry(100, 100, 850, 650) # x, y, width, height
         self.setMinimumSize(700, 500)
@@ -1957,7 +1964,7 @@ class FileOrganizerApp(QMainWindow):
         """Loads the backbone JSON file."""
         backbone_path = Path(__file__).parent / "backbone.json"
         try:
-            if backbone_path.exists():
+            if (backbone_path.exists()):
                 with open(backbone_path, 'r', encoding='utf-8') as f: # Specify encoding
                     return json.load(f)
             else:
