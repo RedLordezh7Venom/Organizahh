@@ -50,8 +50,6 @@ Also will be open later for open source contributions
 - For best results, use the installer for a seamless experience.
 
 ## License
-MIT License
-
----
+ Apache 2.0 + Commons Clause
 
 For questions or support, open an issue on GitHub.
