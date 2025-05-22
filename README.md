@@ -8,7 +8,7 @@ Also will be open later for open source contributions
 ## Features
 - Organize files by type or with AI-powered suggestions
 - Clean, modern PyQt5 GUI
-- Customizable organization structure
+- Customizable organization structure (supports drag and drop)
 - Save and reuse organization templates (backbone)
 - Supports light/dark themes
 - One-click folder opening
