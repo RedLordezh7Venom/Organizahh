@@ -16,7 +16,7 @@ Also will be open later for open source contributions
 
 ## Requirements
 - Windows 10/11 (beta release, more coming up : ) )
-- [Google Gemini API key](https://aistudio.google.com/apikey) (for AI features)
+- [Google Gemini API key](https://aistudio.google.com/apikey) 
 - If running from source: Python 3.11+
 
 ## How to Run
