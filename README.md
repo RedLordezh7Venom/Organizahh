@@ -1,5 +1,6 @@
 # OrganizAhh
 
+Tired of clearing the clutter ? Organizing files a hassle ?  Let Organizahh make it easier for you.
 OrganizAhh is a smart file organizer for Windows, powered by AI (Google Gemini) and a modern PyQt5 interface. It helps you analyze, categorize, and organize files in your folders with ease. You can use it with or without AI features.
 
 Star this repo  ; ) to show your support and help me improve the project.
