@@ -27,7 +27,6 @@ try:
     from langchain_ollama import OllamaLLM
     from langchain_google_genai import GoogleGenerativeAI
     from langchain.prompts import PromptTemplate
-    from langchain.chains import LLMChain
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -46,36 +45,10 @@ APP_NAME = "OrganizAh"
 from pyQT.ThemeManager import ThemeManager
 
 # --- Helper Functions ---
-
-def show_error_message(title, message):
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Critical)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec_()
-
-def show_warning_message(title, message):
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Warning)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec_()
-
-def show_info_message(title, message):
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Information)
-    msg.setWindowTitle(title)
-    msg.setText(message)
-    msg.exec_()
-
-def ask_yes_no(title, question):
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Question)
-    msg.setWindowTitle(title)
-    msg.setText(question)
-    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-    msg.setDefaultButton(QMessageBox.No)
-    return msg.exec_() == QMessageBox.Yes
+from pyQT.Helpers import (
+    show_error_message,show_warning_message,
+    ask_yes_no,show_info_message
+)
 
 # --- Worker Objects for Threading ---
 
