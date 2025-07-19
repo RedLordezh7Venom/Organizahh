@@ -137,7 +137,7 @@ class StartPage(BasePage):
         # Setup Worker Thread
         self.analysis_thread = QThread()
         #============Import Main Agent================#
-        from pyQT.Main import AnalysisWorker
+        from pyQT.Workers import AnalysisWorker
         self.analysis_worker = AnalysisWorker(self.controller)
         self.analysis_worker.moveToThread(self.analysis_thread)
 
@@ -877,7 +877,7 @@ class ConfirmPage(BasePage):
         # Setup Worker Thread
         self.organize_thread = QThread()
         #============Import Main Agent================#
-        from pyQT.Main import OrganizeWorker
+        from pyQT.Workers import OrganizeWorker
         self.organize_worker = OrganizeWorker(self.controller)
         self.organize_worker.moveToThread(self.organize_thread)
 
