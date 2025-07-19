@@ -6,37 +6,10 @@ from dotenv import load_dotenv
 import os
 import shutil
 import json
-import sys
-import subprocess
 import re
-import time # For potential delays if needed
-import gc
-
-from dotenv import load_dotenv
-from pathlib import Path
-
-# --- PyQt5 Imports ---
-from PyQt5.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QStackedWidget,
-    QFrame, QCheckBox,
-)
-from PyQt5.QtCore import  pyqtSignal, QObject
-from PyQt5.QtGui import QFont,  QIcon
-
-
-# --- Theme Management ---
-from pyQT.ThemeManager import ThemeManager
-
-# --- Page Widgets ---
-from pyQT.PageWidgets import (
-    StartPage,AnalyzePage,EditStructurePage,
-    ConfirmPage,CompletePage
-)
-
-
-# --- Helper Functions ---
-from pyQT.Helpers import show_error_message
+  
+from PyQt5.QtCore import  pyqtSignal, QObject 
+ 
 # --- Langchain Imports ---
 try:
     from langchain_ollama import OllamaLLM
@@ -50,7 +23,7 @@ except ImportError:
     class GoogleGenerativeAI: pass
     class PromptTemplate: pass
     class LLMChain: pass
-    
+
 class AnalysisWorker(QObject):
     """Worker for running folder analysis in a separate thread."""
     progress = pyqtSignal(str)

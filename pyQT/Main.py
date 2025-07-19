@@ -20,8 +20,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QComboBox, QStackedWidget,
     QFrame, QCheckBox,
-)
-from PyQt5.QtCore import  pyqtSignal, QObject
+) 
 from PyQt5.QtGui import QFont,  QIcon
 
 
@@ -37,20 +36,7 @@ from pyQT.PageWidgets import (
 
 # --- Helper Functions ---
 from pyQT.Helpers import show_error_message
-# --- Langchain Imports ---
-try:
-    from langchain_ollama import OllamaLLM
-    from langchain_google_genai import GoogleGenerativeAI
-    from langchain.prompts import PromptTemplate
-    LANGCHAIN_AVAILABLE = True
-except ImportError:
-    LANGCHAIN_AVAILABLE = False
-    print("Warning: Langchain or Google GenAI not installed. LLM features will be disabled.")
-    # Define dummy classes if needed for the code structure to run without LLM
-    class GoogleGenerativeAI: pass
-    class PromptTemplate: pass
-    class LLMChain: pass
-
+ 
 
 load_dotenv()
 
