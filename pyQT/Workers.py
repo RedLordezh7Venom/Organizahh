@@ -64,220 +64,161 @@ class AnalysisWorker(QObject):
             analysis_result = {}
             generated_structure = {}
 
-            # Use backbone if available
-            if norm_path in self.controller.backbone:
-                update_status("Using saved organization structure (backbone.json)...")
-                analysis_result = self.controller._analyze_with_backbone(norm_path)
-            else:
-                # Analyze by extension first
-                update_status("Analyzing files by type...")
-                analysis_result = self.controller._analyze_by_extension()
+            # Only use extension-based analysis and LLM if enabled
+            update_status("Analyzing files by type...")
+            analysis_result = self.controller._analyze_by_extension()
 
-                # Generate structure using LLM if available and enabled
-                if LANGCHAIN_AVAILABLE and self.controller.use_llm_analysis:
-                    update_status("Generating intelligent organization structure (LLM)...")
+            # Generate structure using LLM if available and enabled
+            if LANGCHAIN_AVAILABLE and self.controller.use_llm_analysis:
+                update_status("Generating intelligent organization structure (LLM)...")
+                try:
+                    api_key = os.getenv("GOOGLE_API_KEY")
+                    if not api_key:
+                        raise ValueError("GOOGLE_API_KEY not found in environment variables.")
+
+                    # Import necessary components for text splitting and JSON parsing
                     try:
-                        api_key = os.getenv("GOOGLE_API_KEY")
-                        if not api_key:
-                            raise ValueError("GOOGLE_API_KEY not found in environment variables.")
+                        from langchain_text_splitters import RecursiveJsonSplitter
+                        from langchain_core.output_parsers import JsonOutputParser
+                        from pydantic import RootModel
+                        from typing import Dict, Any
 
-                        # Import necessary components for text splitting and JSON parsing
-                        try:
-                            from langchain_text_splitters import RecursiveJsonSplitter
-                            from langchain_core.output_parsers import JsonOutputParser
-                            from pydantic import RootModel
-                            from typing import Dict, Any
+                        class FileOrganization(RootModel):
+                            root: Dict[str, Any]
 
-                            # Define the expected output structure using Pydantic
-                            # Using RootModel to directly represent the structure without a wrapper
-                            class FileOrganization(RootModel):
-                                """File organization structure with topics and subtopics."""
-                                root: Dict[str, Any]
+                        parser = JsonOutputParser(pydantic_object=FileOrganization)
+                        TEXT_SPLITTER_AVAILABLE = True
+                    except ImportError:
+                        update_status("Text splitter or JSON parser not available. Falling back to batch processing.")
+                        TEXT_SPLITTER_AVAILABLE = False
 
-                            # Initialize the JSON output parser
-                            parser = JsonOutputParser(pydantic_object=FileOrganization)
+                    llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+                    all_files = [item for item in os.listdir(self.controller.folder_path)
+                                 if os.path.isfile(os.path.join(self.controller.folder_path, item))]
 
-                            TEXT_SPLITTER_AVAILABLE = True
-                        except ImportError:
-                            update_status("Text splitter or JSON parser not available. Falling back to batch processing.")
-                            TEXT_SPLITTER_AVAILABLE = False
+                    temp_generated_structure = {}
 
-                        # Initialize the LLM
-                        llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
-                        # llm = OllamaLLM(model = "gemma3n:e2b")
-                        # Get all files from the directory
-                        all_files = [item for item in os.listdir(self.controller.folder_path)
-                                     if os.path.isfile(os.path.join(self.controller.folder_path, item))]
+                    if TEXT_SPLITTER_AVAILABLE:
+                        update_status("Using text splitter for efficient processing...")
+                        text_splitter = RecursiveJsonSplitter(max_chunk_size=4000)
+                        files_dict = {"files": all_files}
+                        chunks = text_splitter.split_json(files_dict, convert_lists=True)
+                        update_status(f"Processing {len(all_files)} files in {len(chunks)} chunks...")
+                        prompt_template_str = r"""
+                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
+                        {format_instructions}
+                        Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
 
-                        temp_generated_structure = {}
+                        {{
+                          "Topic_1": {{
+                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
+                            "Subtopic_2": [ "imageA.jpg" ]
+                          }},
+                          "Topic_2": [ "archive.zip", "installer.exe" ]
+                        }}
 
-                        if TEXT_SPLITTER_AVAILABLE:
-                            # Use text splitter approach
-                            update_status("Using text splitter for efficient processing...")
-
-                            # Create a text splitter for handling large file lists
-                            text_splitter = RecursiveJsonSplitter(
-                                max_chunk_size=4000  # Adjust based on model's context window
-                            )
-
-                            # Convert file list to a dictionary for the splitter
-                            files_dict = {"files": all_files}
-                            chunks = text_splitter.split_json(files_dict, convert_lists=True)
-
-                            update_status(f"Processing {len(all_files)} files in {len(chunks)} chunks...")
-
-                            # Create the prompt template with format instructions from the parser
-                            prompt_template_str = r"""
-                            You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
-                            {format_instructions}
-                            Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
-
-                            {{
-                              "Topic_1": {{
-                                "Subtopic_1": [ "file1.txt", "file2.pdf" ],
-                                "Subtopic_2": [ "imageA.jpg" ]
-                              }},
-                              "Topic_2": [ "archive.zip", "installer.exe" ]
-                            }}
-
-                            Here is the list of files to organize:
-                            {files_chunk}
-                            """
-
-                            prompt = PromptTemplate(
-                                template=prompt_template_str,
-                                input_variables=["files_chunk"],
-                                partial_variables={"format_instructions": parser.get_format_instructions()}
-                            )
-
-                            # Process each chunk and merge the results
-                            for i, chunk in enumerate(chunks):
-                                percentage_done = int((i+1)/len(chunks)*100)
-                                update_status(f"Processing files ({percentage_done}% complete)...")
-
-                                # Create the chain for this chunk
-                                chain = prompt | llm | parser
-
-                                # Process the chunk
-                                try:
-                                    result = chain.invoke({"files_chunk": json.dumps(chunk, indent=2)})
-
-                                    # Merge the result into the overall structure
-                                    if not temp_generated_structure:
-                                        # Check if result is a RootModel or a dict
-                                        temp_generated_structure = result.root if hasattr(result, 'root') else result
-                                    else:
-                                        # Get the structure from the result
-                                        result_struct = result.root if hasattr(result, 'root') else result
-                                        # Merge the new structure with the existing one
-                                        for topic, content in result_struct.items():
-                                            if topic in temp_generated_structure:
-                                                # If topic already exists, merge subtopics
-                                                if isinstance(content, dict) and isinstance(temp_generated_structure[topic], dict):
-                                                    for subtopic, files in content.items():
-                                                        if subtopic in temp_generated_structure[topic]:
-                                                            # Merge files in existing subtopic
-                                                            if isinstance(files, list) and isinstance(temp_generated_structure[topic][subtopic], list):
-                                                                temp_generated_structure[topic][subtopic].extend(files)
-                                                            elif isinstance(files, dict) and isinstance(temp_generated_structure[topic][subtopic], dict):
-                                                                temp_generated_structure[topic][subtopic].update(files)
-                                                            else:
-                                                                # Handle mixed types
-                                                                print(f"Warning: Mixed types in subtopic {subtopic}")
+                        Here is the list of files to organize:
+                        {files_chunk}
+                        """
+                        prompt = PromptTemplate(
+                            template=prompt_template_str,
+                            input_variables=["files_chunk"],
+                            partial_variables={"format_instructions": parser.get_format_instructions()}
+                        )
+                        for i, chunk in enumerate(chunks):
+                            percentage_done = int((i+1)/len(chunks)*100)
+                            update_status(f"Processing files ({percentage_done}% complete)...")
+                            chain = prompt | llm | parser
+                            try:
+                                result = chain.invoke({"files_chunk": json.dumps(chunk, indent=2)})
+                                if not temp_generated_structure:
+                                    temp_generated_structure = result.root if hasattr(result, 'root') else result
+                                else:
+                                    result_struct = result.root if hasattr(result, 'root') else result
+                                    for topic, content in result_struct.items():
+                                        if topic in temp_generated_structure:
+                                            if isinstance(content, dict) and isinstance(temp_generated_structure[topic], dict):
+                                                for subtopic, files in content.items():
+                                                    if subtopic in temp_generated_structure[topic]:
+                                                        if isinstance(files, list) and isinstance(temp_generated_structure[topic][subtopic], list):
+                                                            temp_generated_structure[topic][subtopic].extend(files)
+                                                        elif isinstance(files, dict) and isinstance(temp_generated_structure[topic][subtopic], dict):
+                                                            temp_generated_structure[topic][subtopic].update(files)
                                                         else:
-                                                            # Add new subtopic
-                                                            temp_generated_structure[topic][subtopic] = files
-                                                elif isinstance(content, list) and isinstance(temp_generated_structure[topic], list):
-                                                    # If both are lists, extend
-                                                    temp_generated_structure[topic].extend(content)
-                                                else:
-                                                    # Handle mixed types
-                                                    print(f"Warning: Mixed types in topic {topic}")
+                                                            print(f"Warning: Mixed types in subtopic {subtopic}")
+                                                    else:
+                                                        temp_generated_structure[topic][subtopic] = files
+                                            elif isinstance(content, list) and isinstance(temp_generated_structure[topic], list):
+                                                temp_generated_structure[topic].extend(content)
                                             else:
-                                                # Add new topic
-                                                temp_generated_structure[topic] = content
-
-                                    print(f"Successfully processed chunk {i+1}")
-                                except Exception as e:
-                                    print(f"Error processing chunk {i+1}: {e}")
-                                    # Continue with other chunks even if one fails
-
-                        else:
-                            # Fall back to batch processing if text splitter not available
-                            batch_size = int(len(all_files)/2)
-                            batch_size = min(max(batch_size,200),500) #more than 200 but less than 500
-                            batches = [all_files[i:i + batch_size] for i in range(0, len(all_files), batch_size)]
-                            update_status(f"Processing {len(all_files)} files in {len(batches)} batches...")
-
-                            prompt_template_str = r"""
-                            You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
-                            The output MUST be ONLY a valid JSON object, starting with {{ and ending with }}. Do not include any explanations, markdown formatting (like ```json), or other text outside the JSON structure.
-                            Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
-
-                            {{
-                              "Topic_1": {{
-                                "Subtopic_1": [ "file1.txt", "file2.pdf" ],
-                                "Subtopic_2": [ "imageA.jpg" ]
-                              }},
-                              "Topic_2": [ "archive.zip", "installer.exe" ]
-                            }}
-
-                            Here is the list of files for this batch:
-                            {files_batch}
-                            """
-                            prompt = PromptTemplate.from_template(prompt_template_str)
-                            chain = prompt | llm
-
-                            for batch_index, files_batch in enumerate(batches):
-                                update_status(f"Processing batch {batch_index+1}/{len(batches)}...")
-                                files_batch_str = "\n".join(files_batch) # Pass as a string list
-
-                                response = chain.invoke({"files_batch": files_batch_str}) # Use invoke for newer LangChain
-                                llm_output = response # Extract text response
-
-                                # Clean up potential markdown fences
-                                if "```json" in llm_output:
-                                    llm_output = llm_output.split("```json")[1].split("```")[0].strip()
-                                elif "```" in llm_output:
-                                     llm_output = llm_output.split("```")[1].split("```")[0].strip()
-                                else:
-                                    # Assume the whole output is JSON if no fences
-                                    llm_output = llm_output.strip()
-
-                                if not llm_output.startswith('{') or not llm_output.endswith('}'):
-                                    print(f"Warning: LLM output for batch {batch_index+1} doesn't look like JSON: {llm_output[:100]}...")
-                                    # Attempt to find JSON within the output
-                                    match = re.search(r'\{.*\}', llm_output, re.DOTALL)
-                                    if match:
-                                        llm_output = match.group(0)
-                                    else:
-                                        print(f"Failed to extract JSON from batch {batch_index+1}, skipping.")
-                                        continue # Skip this batch if JSON extraction fails
-
-                                batch_structure = self.controller._parse_json_safely(llm_output)
-
-                                if batch_structure:
-                                    self.controller._merge_structures(temp_generated_structure, batch_structure)
-                                    print(f"Successfully processed batch {batch_index+1}")
-                                else:
-                                    print(f"Failed to parse JSON for batch {batch_index+1}, skipping")
-
-                        if not temp_generated_structure:
-                            update_status("LLM analysis did not produce a valid structure. Using extension-based analysis only.")
-                        else:
-                            generated_structure = temp_generated_structure # Assign if successful
-                            update_status(f"Successfully generated organization structure with {len(generated_structure)} categories.")
-
-                    except Exception as e:
-                        self.error.emit(f"Error during LLM analysis: {e}")
-                        print(f"LLM Error: {e}")
-                        # Fallback: generated_structure remains empty
-                        generated_structure = {}
-                else:
-                    if not LANGCHAIN_AVAILABLE:
-                        update_status("Langchain not available. Skipping LLM analysis.")
+                                                print(f"Warning: Mixed types in topic {topic}")
+                                        else:
+                                            temp_generated_structure[topic] = content
+                                print(f"Successfully processed chunk {i+1}")
+                            except Exception as e:
+                                print(f"Error processing chunk {i+1}: {e}")
                     else:
-                         update_status("LLM analysis disabled. Using extension-based analysis only.")
+                        batch_size = int(len(all_files)/2)
+                        batch_size = min(max(batch_size,200),500)
+                        batches = [all_files[i:i + batch_size] for i in range(0, len(all_files), batch_size)]
+                        update_status(f"Processing {len(all_files)} files in {len(batches)} batches...")
+                        prompt_template_str = r"""
+                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
+                        The output MUST be ONLY a valid JSON object, starting with {{ and ending with }}. Do not include any explanations, markdown formatting (like ```json), or other text outside the JSON structure.
+                        Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
+
+                        {{
+                          "Topic_1": {{
+                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
+                            "Subtopic_2": [ "imageA.jpg" ]
+                          }},
+                          "Topic_2": [ "archive.zip", "installer.exe" ]
+                        }}
+
+                        Here is the list of files for this batch:
+                        {files_batch}
+                        """
+                        prompt = PromptTemplate.from_template(prompt_template_str)
+                        chain = prompt | llm
+                        for batch_index, files_batch in enumerate(batches):
+                            update_status(f"Processing batch {batch_index+1}/{len(batches)}...")
+                            files_batch_str = "\n".join(files_batch)
+                            response = chain.invoke({"files_batch": files_batch_str})
+                            llm_output = response
+                            if "```json" in llm_output:
+                                llm_output = llm_output.split("```json")[1].split("```")[0].strip()
+                            elif "```" in llm_output:
+                                 llm_output = llm_output.split("```")[1].split("```")[0].strip()
+                            else:
+                                llm_output = llm_output.strip()
+                            if not llm_output.startswith('{') or not llm_output.endswith('}'):
+                                print(f"Warning: LLM output for batch {batch_index+1} doesn't look like JSON: {llm_output[:100]}...")
+                                match = re.search(r'\{.*\}', llm_output, re.DOTALL)
+                                if match:
+                                    llm_output = match.group(0)
+                                else:
+                                    print(f"Failed to extract JSON from batch {batch_index+1}, skipping.")
+                                    continue
+                            batch_structure = self.controller._parse_json_safely(llm_output)
+                            if batch_structure:
+                                self.controller._merge_structures(temp_generated_structure, batch_structure)
+                                print(f"Successfully processed batch {batch_index+1}")
+                            else:
+                                print(f"Failed to parse JSON for batch {batch_index+1}, skipping")
+                    if not temp_generated_structure:
+                        update_status("LLM analysis did not produce a valid structure. Using extension-based analysis only.")
+                    else:
+                        generated_structure = temp_generated_structure
+                        update_status(f"Successfully generated organization structure with {len(generated_structure)} categories.")
+                except Exception as e:
+                    self.error.emit(f"Error during LLM analysis: {e}")
+                    print(f"LLM Error: {e}")
+                    generated_structure = {}
+            else:
+                if not LANGCHAIN_AVAILABLE:
+                    update_status("Langchain not available. Skipping LLM analysis.")
+                else:
+                     update_status("LLM analysis disabled. Using extension-based analysis only.")
 
 
             # --- Final Summary ---

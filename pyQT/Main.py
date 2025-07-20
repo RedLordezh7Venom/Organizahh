@@ -91,8 +91,7 @@ class FileOrganizerApp(QMainWindow):
         self.organization_summary = ""
         self.use_llm_analysis = LANGCHAIN_AVAILABLE # Enable LLM by default if available
 
-        # --- Load Backbone ---
-        self.backbone = self._load_backbone()
+        # --- Backbone loading removed ---
 
         # --- Central Widget and Layout ---
         self.central_widget = QWidget()
@@ -178,23 +177,7 @@ class FileOrganizerApp(QMainWindow):
         self.setStyleSheet(self.theme_manager.get_stylesheet())
 
 
-    def _load_backbone(self):
-        """Loads the backbone JSON file."""
-        backbone_path = Path(__file__).parent / "backbone.json"
-        try:
-            if (backbone_path.exists()):
-                with open(backbone_path, 'r', encoding='utf-8') as f: # Specify encoding
-                    return json.load(f)
-            else:
-                print(f"Info: backbone.json not found at {backbone_path}. Using default analysis.")
-                return {}
-        except json.JSONDecodeError:
-             # Use QMessageBox here
-             show_error_message("Backbone Error", f"Could not parse backbone.json. Please check its format.")
-             return {}
-        except Exception as e:
-            show_error_message("Backbone Error", f"Failed to load backbone.json: {e}")
-            return {}
+    # Backbone loading removed
 
     def show_page(self, page_name):
         """Switches to the specified page."""
@@ -247,44 +230,7 @@ class FileOrganizerApp(QMainWindow):
     # --- Backend Logic Methods (Copied/Adapted from original) ---
     # These methods are called by the workers or pages
 
-    def _analyze_with_backbone(self, norm_path):
-        # (Keep the logic from the original, ensure it uses self.folder_path)
-        result = {}
-        structure = self.backbone[norm_path]
-        try:
-            files_in_folder = {f for f in os.listdir(self.folder_path) if os.path.isfile(os.path.join(self.folder_path, f))}
-        except Exception as e:
-            # Error should be handled by the caller (worker)
-            raise RuntimeError(f"Could not list files in folder:\n{e}") from e
-
-        processed_files = set()
-
-        def process_level(struct, current_category_path):
-            for name, content in struct.items():
-                # Ensure category_key uses OS-specific separator if needed, though consistency is good
-                category_key = os.path.join(current_category_path, name) if current_category_path else name
-
-                if isinstance(content, dict):
-                    # If category_key represents a folder path, ensure it exists in result
-                    # This original logic seems to assume lists at leaves, let's adapt slightly
-                    # result.setdefault(category_key, []) # Original might be wrong if sub-dicts exist
-                    process_level(content, category_key)
-                elif isinstance(content, list):
-                    result.setdefault(category_key, [])
-                    for file_pattern in content: # Assuming file names, not patterns here
-                        if file_pattern in files_in_folder:
-                            result[category_key].append(file_pattern)
-                            processed_files.add(file_pattern)
-                elif isinstance(content, str): # Assumed to be a single file
-                     result.setdefault(category_key, []) # Store single file in a list for consistency
-                     if content in files_in_folder:
-                         result[category_key].append(content)
-                         processed_files.add(content)
-
-        process_level(structure, "")
-        other_files = files_in_folder - processed_files
-        if other_files: result.setdefault("Others", []).extend(list(other_files))
-        return {k: v for k, v in result.items() if v} # Remove empty categories
+    # Backbone analysis removed
 
     def _analyze_by_extension(self):
         """Analyze files by extension."""
