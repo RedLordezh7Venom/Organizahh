@@ -13,6 +13,7 @@ from PyQt5.QtCore import  pyqtSignal, QObject
 # --- Langchain Imports ---
 try:
     from langchain_ollama import OllamaLLM
+    from langchain_community.llms.llamafile import Llamafile
     from langchain_google_genai import GoogleGenerativeAI
     from langchain.prompts import PromptTemplate
     LANGCHAIN_AVAILABLE = True
@@ -23,6 +24,7 @@ except ImportError:
     class GoogleGenerativeAI: pass
     class PromptTemplate: pass
     class LLMChain: pass
+from scripts.prompt_templates import prompt_template_gemini,prompt_template_local
 
 class AnalysisWorker(QObject):
     """Worker for running folder analysis in a separate thread."""
@@ -93,6 +95,8 @@ class AnalysisWorker(QObject):
                         TEXT_SPLITTER_AVAILABLE = False
 
                     llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+                    # llm = OllamaLLM(model="qwen2.5:3b")
+                    # llm = Llamafile()
                     all_files = [item for item in os.listdir(self.controller.folder_path)
                                  if os.path.isfile(os.path.join(self.controller.folder_path, item))]
 
@@ -104,22 +108,7 @@ class AnalysisWorker(QObject):
                         files_dict = {"files": all_files}
                         chunks = text_splitter.split_json(files_dict, convert_lists=True)
                         update_status(f"Processing {len(all_files)} files in {len(chunks)} chunks...")
-                        prompt_template_str = r"""
-                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
-                        {format_instructions}
-                        Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
-
-                        {{
-                          "Topic_1": {{
-                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
-                            "Subtopic_2": [ "imageA.jpg" ]
-                          }},
-                          "Topic_2": [ "archive.zip", "installer.exe" ]
-                        }}
-
-                        Here is the list of files to organize:
-                        {files_chunk}
-                        """
+                        prompt_template_str = prompt_template_gemini
                         prompt = PromptTemplate(
                             template=prompt_template_str,
                             input_variables=["files_chunk"],
