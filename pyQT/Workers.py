@@ -94,8 +94,8 @@ class AnalysisWorker(QObject):
                         update_status("Text splitter or JSON parser not available. Falling back to batch processing.")
                         TEXT_SPLITTER_AVAILABLE = False
                     
-                    llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
-                    # llm = OllamaLLM(model="qwen2.5:3b");local_model = True
+                    # llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
+                    llm = OllamaLLM(model="gemma3n:e2b");local_model = True
                     # llm = Llamafile();local_model = True
                     all_files = [item for item in os.listdir(self.controller.folder_path)
                                  if os.path.isfile(os.path.join(self.controller.folder_path, item))]
@@ -108,7 +108,6 @@ class AnalysisWorker(QObject):
                         files_dict = {"files": all_files}
                         chunks = text_splitter.split_json(files_dict, convert_lists=True)
                         update_status(f"Processing {len(all_files)} files in {len(chunks)} chunks...")
-                        local_model = True
                         prompt = PromptTemplate(
                             template=prompt_template_gemini if not local_model else prompt_template_local,
                             input_variables=["files_chunk"],
