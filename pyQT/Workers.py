@@ -13,6 +13,7 @@ from PyQt5.QtCore import  pyqtSignal, QObject
 # --- Langchain Imports ---
 try:
     from langchain_ollama import OllamaLLM
+    from langchain_community.llms.llamafile import Llamafile
     from langchain_google_genai import GoogleGenerativeAI
     from langchain.prompts import PromptTemplate
     LANGCHAIN_AVAILABLE = True
@@ -93,6 +94,8 @@ class AnalysisWorker(QObject):
                         TEXT_SPLITTER_AVAILABLE = False
 
                     llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+                    # llm = OllamaLLM(model="qwen2.5:3b")
+                    # llm = Llamafile()
                     all_files = [item for item in os.listdir(self.controller.folder_path)
                                  if os.path.isfile(os.path.join(self.controller.folder_path, item))]
 
@@ -108,15 +111,28 @@ class AnalysisWorker(QObject):
                         You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
                         {format_instructions}
                         Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
-
+ 
+                        Example 1:
+                        Files: ["budget_2024.xlsx", "project_plan.docx", "team_photo.jpg"]
+                        Output:
                         {{
-                          "Topic_1": {{
-                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
-                            "Subtopic_2": [ "imageA.jpg" ]
-                          }},
-                          "Topic_2": [ "archive.zip", "installer.exe" ]
+                        "Documents": {{
+                            "Finance": ["budget_2024.xlsx"],
+                            "Planning": ["project_plan.docx"]
+                        }},
+                        "Media": ["team_photo.jpg"]
                         }}
 
+                        Example 2:
+                        Files: ["main.py", "utils.py", "readme.md", "requirements.txt"]
+                        Output:
+                        {{
+                        "Code": {{
+                            "Python": ["main.py", "utils.py"],
+                            "Documentation": ["readme.md", "requirements.txt"]
+                        }}
+                        }}
+                        
                         Here is the list of files to organize:
                         {files_chunk}
                         """
