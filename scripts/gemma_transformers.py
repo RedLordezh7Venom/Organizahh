@@ -1,6 +1,16 @@
-from litert_tools.pipeline import pipeline
-runner = pipeline.load("Gemma3-1B-IT_seq128_q8_ekv1280.task", repo_id="litert-community/Gemma3-1B-IT")
+from llama_cpp import Llama
 
-# Disclaimer: Model performance demonstrated with the Python API in this notebook is not representative of performance on a local device.
-prompt = "Generate 20 file names?"
-output = runner.generate(prompt)
+mistral = Llama.from_pretrained(repo_id="Qwen/Qwen2.5-3B-Instruct-GGUF",
+                                filename="*q4_0.gguf",
+                                verbose=False
+                               ) 
+
+resp = mistral("Q: Write a short paragraph introducing Elon Musk. A: ",
+           max_tokens=256,
+           stop=["Q:", "\n"])
+           
+resp = mistral("Give folder names for these files  :  result.xslx, marks.pdf, icecream.png, student.sqlite",
+           max_tokens=256,
+           stop=["Q:", "\n"])
+
+print(resp)
