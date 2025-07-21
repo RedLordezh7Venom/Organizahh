@@ -35,7 +35,7 @@ from pyQT.PageWidgets import (
 
 
 # --- Helper Functions ---
-from pyQT.Helpers import show_error_message
+from pyQT.Helpers import show_error_message,show_info_message,ask_yes_no,show_warning_message
  
 
 load_dotenv()
@@ -90,6 +90,7 @@ class FileOrganizerApp(QMainWindow):
         self.current_analysis_summary = ""
         self.organization_summary = ""
         self.use_llm_analysis = LANGCHAIN_AVAILABLE # Enable LLM by default if available
+        self.last_organization_moves = [] # Store moves for undo functionality
 
         # --- Backbone loading removed ---
 
@@ -207,6 +208,7 @@ class FileOrganizerApp(QMainWindow):
         self.generated_structure = {}
         self.current_analysis_summary = ""
         self.organization_summary = ""
+        self.last_organization_moves = [] # Clear moves on reset
 
         # Reset StartPage widgets
         start_page = self.pages.get("StartPage")
@@ -307,3 +309,56 @@ class FileOrganizerApp(QMainWindow):
                     target[key] = value
             else:
                 target[key] = value
+
+    def undo_organization(self):
+        """Reverts the last organization operation."""
+        if not self.last_organization_moves:
+            show_info_message("Undo Not Available", "No recent organization to undo.")
+            return False
+
+        if not ask_yes_no("Confirm Undo", "Are you sure you want to undo the last organization?\nThis will move files back to their original locations."):
+            return False
+
+        undo_success = True
+        undo_errors = []
+        for dst, src in reversed(self.last_organization_moves): # Undo in reverse order
+            if os.path.exists(dst):
+                try:
+                    # Ensure parent directory for src exists if it was a new folder
+                    src_dir = os.path.dirname(src)
+                    if not os.path.exists(src_dir):
+                        os.makedirs(src_dir)
+                    shutil.move(dst, src)
+                    print(f"Undo: Moved '{dst}' back to '{src}'")
+                except Exception as e:
+                    undo_success = False
+                    undo_errors.append(f"Failed to undo '{os.path.basename(dst)}': {e}")
+                    print(f"Error during undo: {e}")
+            else:
+                print(f"Warning: Destination file not found for undo: {dst}")
+
+        # After moving files back, attempt to remove any now-empty directories
+        # This is a best-effort cleanup and might not remove all empty dirs if they were nested
+        # or if other files remain.
+        organized_dirs = set()
+        for dst, _ in self.last_organization_moves:
+            organized_dirs.add(os.path.dirname(dst))
+        
+        for d in sorted(list(organized_dirs), key=len, reverse=True): # Try to remove deepest first
+            try:
+                if os.path.exists(d) and not os.listdir(d): # Check if directory is empty
+                    os.rmdir(d)
+                    print(f"Removed empty directory: {d}")
+            except OSError as e:
+                print(f"Could not remove directory '{d}': {e}")
+                # Don't add to undo_errors as it's a cleanup step, not a critical undo failure
+
+        self.last_organization_moves = [] # Clear moves after undo
+
+        if undo_success and not undo_errors:
+            show_info_message("Undo Complete", "Files have been restored to their original locations.")
+            return True
+        else:
+            error_msg = "Undo completed with some issues:\n" + "\n".join(undo_errors)
+            show_warning_message("Undo with Issues", error_msg)
+            return False

@@ -94,9 +94,9 @@ class AnalysisWorker(QObject):
                         update_status("Text splitter or JSON parser not available. Falling back to batch processing.")
                         TEXT_SPLITTER_AVAILABLE = False
                     
-                    # llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
-                    llm = OllamaLLM(model="qwen2.5:3b");local_model = True
-                    # llm = Llamafile();local_model = True
+                    llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
+                    # llm = OllamaLLM(model="qwen2.5:3b");local_model = True
+                    # llm = Llamafile();local_model = True # llamafiles just don't aren't working for some reason
                     all_files = [item for item in os.listdir(self.controller.folder_path)
                                  if os.path.isfile(os.path.join(self.controller.folder_path, item))]
 
@@ -249,7 +249,7 @@ class AnalysisWorker(QObject):
 
 class OrganizeWorker(QObject):
     """Worker for running file organization in a separate thread."""
-    finished = pyqtSignal(bool, str) # success, summary_message
+    finished = pyqtSignal(bool, str, list) # success, summary_message, list of (dst, src) moves
     error = pyqtSignal(str)
 
     def __init__(self, controller):
@@ -261,12 +261,13 @@ class OrganizeWorker(QObject):
             # --- Organization Logic (Adapted from original) ---
             if not self.controller.analysis_result and not self.controller.generated_structure:
                 self.error.emit("No analysis data found to organize.")
-                self.finished.emit(False, "No analysis data found.")
+                self.finished.emit(False, "No analysis data found.", [])
                 return
 
             moved_count = 0
             error_count = 0
             error_messages = []
+            recorded_moves = [] # List to store (destination, source) for undo
             target_structure = self.controller.generated_structure if self.controller.generated_structure else self.controller.analysis_result
             use_llm_structure = bool(self.controller.generated_structure)
 
@@ -274,7 +275,7 @@ class OrganizeWorker(QObject):
 
             # --- Recursive function for LLM structure ---
             def create_folders_and_move_llm(structure, current_rel_path=""):
-                nonlocal moved_count, error_count, error_messages
+                nonlocal moved_count, error_count, error_messages, recorded_moves
                 base_target_dir = self.controller.folder_path
 
                 for item_name, contents in structure.items():
@@ -303,6 +304,7 @@ class OrganizeWorker(QObject):
                                             print(f"Moving: {src_path} -> {dst_path}")
                                             shutil.move(src_path, dst_path)
                                             moved_count += 1
+                                            recorded_moves.append((dst_path, src_path)) # Record for undo
                                         except Exception as e:
                                             error_count += 1
                                             error_messages.append(f"Move Error '{file_name}' to '{current_rel_path}': {e}")
@@ -350,6 +352,7 @@ class OrganizeWorker(QObject):
                                         print(f"Moving: {src_path} -> {dst_path}")
                                         shutil.move(src_path, dst_path)
                                         moved_count += 1
+                                        recorded_moves.append((dst_path, src_path)) # Record for undo
                                     except Exception as e:
                                         error_count += 1
                                         error_messages.append(f"Move Error '{file_name}' to '{new_rel_path}': {e}")
@@ -384,6 +387,7 @@ class OrganizeWorker(QObject):
                                     print(f"Moving: {src_path} -> {dst_path}")
                                     shutil.move(src_path, dst_path)
                                     moved_count += 1
+                                    recorded_moves.append((dst_path, src_path)) # Record for undo
                                 except Exception as e:
                                     error_count += 1
                                     error_messages.append(f"Move Error '{file_name}' to '{new_rel_path}': {e}")
@@ -424,6 +428,7 @@ class OrganizeWorker(QObject):
                                 print(f"Moving: {src} -> {dst}")
                                 shutil.move(src, dst)
                                 moved_count += 1
+                                recorded_moves.append((dst, src)) # Record for undo
                             except Exception as e:
                                 error_count += 1
                                 error_messages.append(f"Move Error '{file}' to '{category}': {e}")
@@ -441,7 +446,7 @@ class OrganizeWorker(QObject):
                 summary += f"\n\nEncountered {error_count} error(s):\n" + "\n".join(error_messages[:10]) # Show first 10 errors
                 if len(error_messages) > 10:
                      summary += f"\n...and {len(error_messages) - 10} more errors."
-                self.finished.emit(True, summary) # Still emit success=True to show summary page
+                self.finished.emit(True, summary, recorded_moves) # Still emit success=True to show summary page
             elif moved_count == 0 and not error_count:
                  # Check if there were files to move initially
                  initial_files_exist = False
@@ -461,14 +466,14 @@ class OrganizeWorker(QObject):
                  if initial_files_exist:
                      summary = "No files were moved. Check permissions or if files already match the target structure."
                      self.error.emit("No files were moved. Check permissions or if files already match the target structure.")
-                     self.finished.emit(False, summary) # Emit False as nothing happened
+                     self.finished.emit(False, summary, []) # Emit False as nothing happened
                  else:
                      summary = "No files found in the analysis to organize."
-                     self.finished.emit(True, summary) # Emit True as the process completed without error on an empty set
+                     self.finished.emit(True, summary, []) # Emit True as the process completed without error on an empty set
 
             else: # moved_count > 0 and error_count == 0
-                self.finished.emit(True, summary)
+                self.finished.emit(True, summary, recorded_moves)
 
         except Exception as e:
             self.error.emit(f"An unexpected error occurred during organization: {e}")
-            self.finished.emit(False, "An unexpected error occurred.")
+            self.finished.emit(False, "An unexpected error occurred.", [])

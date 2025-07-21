@@ -14,6 +14,7 @@ except ImportError:
     print("Warning: Langchain or Google GenAI not installed. LLM features will be disabled.")
     class GoogleGenerativeAI: pass
     class PromptTemplate: pass
+from scripts.prompt_templates import prompt_template_gemini
 
 load_dotenv()
 
@@ -26,21 +27,7 @@ def generate_structure_with_gemini(files):
         print("Gemini/Google GenAI not available. Falling back to extension-based organization.")
         return None
     llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
-    prompt_template_str = r"""
-    You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
-    The output MUST be ONLY a valid JSON object, starting with {{ and ending with }}. Do not include any explanations, markdown formatting, or other text outside the JSON structure.
-    Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
-    {{
-      "Topic_1": {{
-        "Subtopic_1": [ "file1.txt", "file2.pdf" ],
-        "Subtopic_2": [ "imageA.jpg" ]
-      }},
-      "Topic_2": [ "archive.zip", "installer.exe" ]
-    }}
-    Here is the list of files:
-    {files_list}
-    """
-    prompt = PromptTemplate.from_template(prompt_template_str)
+    prompt = PromptTemplate.from_template(prompt_template_gemini)
     chain = prompt | llm
     files_list_str = "\n".join(files)
     response = chain.invoke({"files_list": files_list_str})

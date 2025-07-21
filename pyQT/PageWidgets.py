@@ -835,7 +835,7 @@ class ConfirmPage(BasePage):
 
         # --- Warning Text ---
         warning_text = ("This will move files into new subfolders within the selected directory.\n\n"
-                        "This action cannot be automatically undone.")
+                        "You will have an option to undo this action on the next screen.")
         warning_details = QLabel(warning_text)
         warning_details.setFont(self.FONT_BODY)
         # warning_details.setStyleSheet("color: gray;")
@@ -890,13 +890,14 @@ class ConfirmPage(BasePage):
         # Start
         self.organize_thread.start()
 
-     def organize_complete(self, success, summary_message):
+     def organize_complete(self, success, summary_message, recorded_moves):
         self.organize_thread.quit()
         self.organize_thread.wait()
         self.confirm_btn.setText("Yes, Organize Now")
         self.confirm_btn.setEnabled(True)
 
         self.controller.organization_summary = summary_message # Store summary
+        self.controller.last_organization_moves = recorded_moves # Store moves for undo
 
         if success:
             # Update CompletePage message before showing
@@ -957,6 +958,14 @@ class CompletePage(BasePage):
         open_btn.clicked.connect(self.open_folder)
         card_layout.addWidget(open_btn, alignment=Qt.AlignCenter)
 
+        # Undo Button
+        self.undo_btn = QPushButton("↩️ Undo Organization")
+        self.undo_btn.setFont(self.FONT_BUTTON)
+        self.undo_btn.setFixedWidth(btn_width)
+        self.undo_btn.setFixedHeight(40)
+        self.undo_btn.clicked.connect(self.undo_last_organization)
+        card_layout.addWidget(self.undo_btn, alignment=Qt.AlignCenter)
+
         again_btn = QPushButton("Organize Another Folder")
         again_btn.setFont(self.FONT_BUTTON)
         again_btn.setFixedWidth(btn_width)
@@ -973,6 +982,13 @@ class CompletePage(BasePage):
 
         layout.addWidget(card)
         self.setLayout(layout)
+
+    def undo_last_organization(self):
+        """Calls the controller's undo method and updates UI."""
+        if self.controller.undo_organization():
+            self.undo_btn.setEnabled(False) # Disable after successful undo
+            self.details_label.setText("Organization undone. Files restored.")
+            # Optionally, could go back to StartPage or show a different message
 
     def open_folder(self):
         """Open the organized folder in file explorer."""
@@ -1000,4 +1016,3 @@ class CompletePage(BasePage):
     def on_show(self):
         """Ensure the message is updated when shown."""
         self.update_completion_message()
-
