@@ -14,6 +14,7 @@ from PyQt5.QtCore import  pyqtSignal, QObject
 try:
     from langchain_ollama import OllamaLLM
     from langchain_community.llms.llamafile import Llamafile
+    from scripts.llama_cpp_custom import MyQwenLLM
     from langchain_google_genai import GoogleGenerativeAI
     from langchain.prompts import PromptTemplate
     LANGCHAIN_AVAILABLE = True
@@ -24,6 +25,7 @@ except ImportError:
     class GoogleGenerativeAI: pass
     class PromptTemplate: pass
     class LLMChain: pass
+ 
 from scripts.prompt_templates import prompt_template_gemini,prompt_template_local
 
 class AnalysisWorker(QObject):
@@ -94,7 +96,7 @@ class AnalysisWorker(QObject):
                         update_status("Text splitter or JSON parser not available. Falling back to batch processing.")
                         TEXT_SPLITTER_AVAILABLE = False
                     
-                    llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
+                    # llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
                     # llm = OllamaLLM(model="qwen2.5:3b");local_model = True
                     # llm = Llamafile();local_model = True # llamafiles just don't aren't working for some reason
                     all_files = [item for item in os.listdir(self.controller.folder_path)
