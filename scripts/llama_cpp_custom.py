@@ -31,7 +31,7 @@ def get_qllm() -> MyQwenLLM:
             repo_id="Qwen/Qwen2.5-3B-Instruct-GGUF",
             filename="*q4_0.gguf",
             verbose=False,
-            n_ctx=8192
+            n_ctx=32768
         )
         _qwen_instance = MyQwenLLM(model=qwen_model)
         print("✅ Qwen model initialized.")
