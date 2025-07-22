@@ -14,7 +14,7 @@ from PyQt5.QtCore import  pyqtSignal, QObject
 try:
     from langchain_ollama import OllamaLLM
     from langchain_community.llms.llamafile import Llamafile
-    from scripts.llama_cpp_custom import MyQwenLLM
+    from app import GLOBAL_QWEN_LLM
     from langchain_google_genai import GoogleGenerativeAI
     from langchain.prompts import PromptTemplate
     LANGCHAIN_AVAILABLE = True
@@ -98,6 +98,7 @@ class AnalysisWorker(QObject):
                     
                     # llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key);local_model = False
                     # llm = OllamaLLM(model="qwen2.5:3b");local_model = True
+                    llm = GLOBAL_QWEN_LLM ;local_model = True; #using custom qwen llama cpp
                     # llm = Llamafile();local_model = True # llamafiles just don't aren't working for some reason
                     all_files = [item for item in os.listdir(self.controller.folder_path)
                                  if os.path.isfile(os.path.join(self.controller.folder_path, item))]

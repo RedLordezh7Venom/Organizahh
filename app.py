@@ -7,6 +7,15 @@ import subprocess
 import re
 import time # For potential delays if needed
 import gc
+# ✅ Preload LLM in main thread
+GLOBAL_QWEN_LLM = None
+try:
+    print("🔄 Initializing Qwen LLM in main thread...")
+    from scripts.llama_cpp_custom import get_qllm
+    GLOBAL_QWEN_LLM = get_qllm()
+    print("✅ Qwen LLM initialized successfully!")
+except Exception as e:
+    print(f"⚠️ Warning: Qwen LLM could not be initialized. Continuing without it. Error: {e}")
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -29,6 +38,7 @@ except ImportError:
     class GoogleGenerativeAI: pass
     class PromptTemplate: pass
     class LLMChain: pass
+
 
 
 load_dotenv()
