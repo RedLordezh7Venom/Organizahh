@@ -26,7 +26,7 @@ _qwen_instance: Optional[MyQwenLLM] = None
 def get_qllm() -> MyQwenLLM:
     global _qwen_instance
     if _qwen_instance is None:
-        print("🔄 Initializing Qwen model...")
+        print("🔄 Initializing LLAMA CPP model...")
         qwen_model = Llama.from_pretrained(
             repo_id="Qwen/Qwen2.5-3B-Instruct-GGUF",
             filename="*q4_0.gguf",
@@ -34,5 +34,5 @@ def get_qllm() -> MyQwenLLM:
             n_ctx=32768
         )
         _qwen_instance = MyQwenLLM(model=qwen_model)
-        print("✅ Qwen model initialized.")
+        print("✅ LLAMA CPP initialized.")
     return _qwen_instance
