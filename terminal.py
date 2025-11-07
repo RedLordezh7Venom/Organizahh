@@ -17,7 +17,6 @@ except ImportError:
     class OllamaLLM: pass
 
 load_dotenv()
-api_key = os.getenv('GOOGLE_API_KEY')
 
 # --- Utils ---
 def get_files_in_folder(folder_path):
@@ -26,9 +25,7 @@ def get_files_in_folder(folder_path):
 from scripts.llama_cpp_custom import get_qllm  # ✅ Same as you used
 
 # --- Step 1: Folder structure generation ---
-def generate_folder_structure(files, user_instructions):
-    # llm = get_qllm()
-    llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+def generate_folder_structure(files, user_instructions, llm):
     prompt_text = f"""
 You are an expert file organizer.
 
@@ -51,13 +48,20 @@ STRICTLY return valid JSON, no extra text.
     return json.loads(match.group(0))
 
 # --- Step 2: File assignment ---
-def assign_files_to_structure(files, existing_structure, user_instructions):
-    # llm = get_qllm()
-    llm =GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
-    prompt_text = f"""
-You are an expert file organizer.
+def assign_files_to_structure(files, existing_structure, user_instructions, llm):
+    prompt_text = r"""
+                        You are an expert file organizer. Given a list of filenames from a directory, generate a JSON structure proposing a logical organization into folders and subfolders, intelligently and intuitively based.
+                        Group similar files together. Use descriptive names for topics and subtopics. The structure should resemble this example:
 
-User's specific instructions:
+                        {{
+                          "Topic_1": {{
+                            "Subtopic_1": [ "file1.txt", "file2.pdf" ],
+                            "Subtopic_2": [ "imageA.jpg" ]
+                          }},
+                          "Topic_2": [ "archive.zip", "installer.exe" ]
+                        }}
+Also , if user calls for specific instructions, follow them too:
+                        User's specific instructions:
 {user_instructions}
 
 Assign the following files into the given folder structure by filling ONLY the arrays. 
@@ -125,6 +129,8 @@ def main():
     parser.add_argument("folder_path", help="Folder to organize")
     parser.add_argument("--instruction", type=str, default="Organize files intelligently.",
                         help="Custom instruction for organizing files")
+    parser.add_argument("--offline", nargs='?', const='qwen', default=None,
+                        help='Use an offline model. Specify "ollama" for Ollama, otherwise Qwen is used.')
     args = parser.parse_args()
 
     folder_path = args.folder_path
@@ -132,13 +138,41 @@ def main():
         print("Invalid folder path.")
         sys.exit(1)
 
+    # --- LLM Initialization ---
+    llm = None
+    model_name = ""
+    if args.offline == 'ollama':
+        model_name = "Ollama"
+        print(f"Using {model_name} model.")
+        llm = OllamaLLM(model="gemma3:270m")  # Assuming a default model for ollama
+    elif args.offline == 'qwen':
+        model_name = "Qwen"
+        print(f"Using {model_name} model.")
+        llm = get_qllm()
+    else:
+        model_name = "Gemini"
+        print(f"Using {model_name} model.")
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            api_key = input("Please enter your Google Gemini API key: ").strip()
+            if api_key:
+                with open(".env", "a") as f:
+                    f.write(f"\nGOOGLE_API_KEY={api_key}")
+                load_dotenv() # Reload .env to make the new key available
+                api_key = os.getenv('GOOGLE_API_KEY')
+            else:
+                print("API key is required for Gemini. Exiting.")
+                sys.exit(1)
+        llm = GoogleGenerativeAI(model="gemini-2.0-flash", google_api_key=api_key)
+
+
     files = get_files_in_folder(folder_path)
     if not files:
         print("No files found.")
         sys.exit(0)
 
-    print(f"📂 Found {len(files)} files. Generating structure with Qwen...")
-    structure = generate_folder_structure(files, args.instruction)
+    print(f"📂 Found {len(files)} files. Generating structure with {model_name}...")
+    structure = generate_folder_structure(files, args.instruction, llm)
     if not structure:
         print("❌ Failed to generate folder structure.")
         sys.exit(1)
@@ -148,7 +182,7 @@ def main():
     for i in range(0, len(files), batch_size):
         batch = files[i:i + batch_size]
         print(f"Assigning batch {i//batch_size + 1}/{(len(files)+batch_size-1)//batch_size}...")
-        updated = assign_files_to_structure(batch, structure, args.instruction)
+        updated = assign_files_to_structure(batch, structure, args.instruction, llm)
         if updated:
             structure = merge_structures(structure, updated)
 
